@@ -44,8 +44,8 @@ jobs:
           flutter create --platforms=android --org uz --project-name ecoschool .
           git checkout -- lib pubspec.yaml || true
 
-      - name: Ilova nomi
-        run: sed -i 's/android:label="[^"]*"/android:label="ECO SCHOOL"/' android/app/src/main/AndroidManifest.xml
+      - name: Manifestni to'g'rilash
+        run: python3 tool/prepare_android.py
 
       - name: Kutubxonalar
         run: flutter pub get

@@ -37,9 +37,9 @@ PBKDF2_ITERATIONS = "100000"
 MAX_UPLOAD_BYTES = "5000000"
 POINTS_PER_KG = "25"
 # Bot xabarlaridagi havolalar uchun. Domen ulagach, shu yerga yozing.
-# SITE_URL = "https://eco.bugunbor.uz"
+SITE_URL = "https://eco-school.eco-school.workers.dev"
 # Bot nomi @ belgisisiz — profil sahifasida havola chiqishi uchun.
-# TELEGRAM_BOT_USERNAME = "eco_school_bot"
+TELEGRAM_BOT_USERNAME = "ecoschoo1l_bot"
 # Kanal: yangi vazifa, marafon kunlari va e'lonlar shu yerga ham joylanadi.
 # Bot kanalga admin qilinishi kerak. Yopiq kanal bo'lsa -100... raqami yoziladi.
 TELEGRAM_CHANNEL = "@ecofutureandijan"
