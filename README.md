@@ -475,72 +475,64 @@ ketmasin.
 
 ---
 
-## 📱 Android ilova (APK)
+## 📱 Android ilova (Flutter)
 
-Sayt Android ilovasi sifatida ham yig'iladi. Ichida **Trusted Web
-Activity** — ya'ni Chrome dvigateli, WebView emas. Shuning uchun rasm
-yuklash, kamera va cookie'lar brauzerdagidek ishlaydi, sayt yangilansa
-ilova ham o'zi yangilanadi (ilovani qayta yig'ish shart emas).
+`flutter_app/` — Dart'da yozilgan haqiqiy Android ilovasi. Sayt bilan
+bitta API'dan ishlaydi, dizayni ham saytnikidek.
+
+**Ichida nima bor.** Pastki beshta bo'lim: Vazifalar, Marafon, Recycling,
+Reyting, Profil. Adminlar uchun profil ichida «Admin panel» — tasdiqlash
+navbati, vazifa va marafon yaratish, e'lon yuborish.
+
+Rasm kamera yoki galereyadan olinadi, telefonning o'zida kichraytiriladi
+va serverga yuboriladi.
+
+**Kirish.** Ilova cookie emas, token ishlatadi: kirishda server token
+qaytaradi, u telefonda saqlanadi va keyingi so'rovlarda sarlavhada
+ketadi. Shuning uchun bola bir marta kirsa, ilova uni eslab qoladi.
 
 ### Yig'ish
 
-GitHub'da **Actions → Android APK → Run workflow**. Uchta maydon:
-sayt manzili, versiya nomi va versiya raqami. Tugagach APK `Artifacts`
-bo'limidan yuklab olinadi.
+GitHub'da **Actions → Android APK → Run workflow**. Uch maydon: sayt
+manzili, versiya nomi, versiya raqami. APK `Artifacts → eco-school-apk`
+dan yuklab olinadi.
 
-Kalitsiz ham ishlaydi — u holda sinov (debug) kaliti bilan imzolanadi.
-Bunday APK telefonga o'rnatiladi, lekin Play Market uchun yaramaydi va
-har safar imzosi o'zgaradi.
+Android papkasi repoda saqlanmaydi — uni `flutter create` har safar
+yangidan yasaydi, `lib/` va `pubspec.yaml` esa bizniki qolaveradi. Shuning
+uchun repo yengil va Flutter versiyasi yangilansa ham muammo bo'lmaydi.
 
-### O'z kalitingiz bilan (tavsiya etiladi)
+### O'z kalitingiz bilan imzolash
 
-Bir marta kalit yaratasiz:
-
-```bash
-keytool -genkeypair -v -keystore eco.jks -alias eco \
-  -keyalg RSA -keysize 2048 -validity 10000
-```
-
-Keyin uni base64 qilib GitHub secret'iga qo'yasiz:
+Kalitsiz ham yig'iladi (sinov kaliti bilan), lekin bunday APK'ni keyin
+yangilab bo'lmaydi — har safar eskisini o'chirib, qaytadan o'rnatishga
+to'g'ri keladi.
 
 ```bash
-base64 -w0 eco.jks       # Windows: certutil -encode eco.jks eco.txt
+keytool -genkeypair -v -keystore eco.jks -alias eco -keyalg RSA -keysize 2048 -validity 10000
+certutil -encode eco.jks eco.txt
 ```
 
-GitHub → Settings → Secrets → Actions:
+`eco.txt` ichidagi matnni (BEGIN/END qatorlarisiz) GitHub secret'iga
+qo'yasiz:
 
 | Nomi | Qiymati |
 |---|---|
-| `ANDROID_KEYSTORE_BASE64` | yuqoridagi uzun matn |
-| `ANDROID_KEYSTORE_PASSWORD` | kalit parolingiz |
+| `ANDROID_KEYSTORE_BASE64` | o'sha matn |
+| `ANDROID_KEYSTORE_PASSWORD` | kalit paroli |
 | `ANDROID_KEY_ALIAS` | `eco` |
-| `ANDROID_KEY_PASSWORD` | kalit parolingiz |
+| `ANDROID_KEY_PASSWORD` | kalit paroli |
 
-> **`eco.jks` faylini yo'qotmang.** Ilovani keyin yangilash faqat shu
-> kalit bilan mumkin — yo'qolsa, Play Market'da yangi ilova ochishga
-> to'g'ri keladi.
+`eco.jks` faylini yo'qotmang — ilovani yangilash faqat shu kalit bilan
+mumkin.
 
-### Manzil qatorini yo'qotish
+### Kompyuterda ishlatish
 
-Yig'ilgandan keyin workflow log'ida **SHA-256 barmoq izi** chiqadi. Uni
-`wrangler.toml` ga qo'yasiz:
-
-```toml
-ANDROID_FINGERPRINT = "AA:BB:CC:..."
+```bash
+cd flutter_app
+flutter create --platforms=android --org uz --project-name ecoschool .
+flutter pub get
+flutter run --dart-define=ECO_API=https://eco-school.eco-school.workers.dev
 ```
-
-va `npm run deploy`. Shundan keyin ilova tepasidagi brauzer manzil qatori
-yo'qoladi — haqiqiy ilovaga o'xshab ochiladi. Qo'yilmasa ilova baribir
-ishlaydi, faqat tepada manzil ko'rinib turadi.
-
-Tekshirish: `https://<sayt>/.well-known/assetlinks.json` ochilsa, barmoq
-izi ko'rinishi kerak.
-
-### Telefonga o'rnatish
-
-APK'ni telefonga tashlab, ochasiz. Android «noma'lum manbadan» deb
-so'raydi — ruxsat berasiz. Play Market'ga qo'yish uchun `assembleRelease`
-o'rniga `bundleRelease` kerak bo'ladi (`.aab`), ayting — qo'shaman.
 
 ---
 

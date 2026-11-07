@@ -1,0 +1,88 @@
+name: Android APK
+
+# Qo'lda ishga tushiriladi: Actions → Android APK → Run workflow
+on:
+  workflow_dispatch:
+    inputs:
+      siteUrl:
+        description: "Sayt manzili (https://...)"
+        required: true
+        default: "https://eco-school.eco-school.workers.dev"
+      versionName:
+        description: "Versiya nomi"
+        required: true
+        default: "1.0.0"
+      versionCode:
+        description: "Versiya raqami (har safar oshiriladi)"
+        required: true
+        default: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Android papkasini yaratish
+        run: |
+          flutter create --platforms=android --org uz --project-name ecoschool .
+          git checkout -- lib pubspec.yaml || true
+
+      - name: Ilova nomi
+        run: sed -i 's/android:label="[^"]*"/android:label="ECO SCHOOL"/' android/app/src/main/AndroidManifest.xml
+
+      - name: Kutubxonalar
+        run: flutter pub get
+
+      - name: Ikonkalar
+        run: dart run flutter_launcher_icons
+
+      - name: Imzo kaliti
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/eco.jks"
+            python3 tool/configure_signing.py "$RUNNER_TEMP/eco.jks" "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"
+          else
+            echo "ANDROID_KEYSTORE_BASE64 yo'q — sinov (debug) kaliti ishlatiladi."
+            echo "APK o'rnatiladi, lekin Play Market uchun yaramaydi."
+          fi
+
+      - name: APK yig'ish
+        run: |
+          flutter build apk --release \
+            --dart-define=ECO_API=${{ inputs.siteUrl }} \
+            --build-name=${{ inputs.versionName }} \
+            --build-number=${{ inputs.versionCode }}
+
+      - name: Imzo barmoq izi
+        run: |
+          APK=$(find build/app/outputs/flutter-apk -name '*.apk' | head -1)
+          echo "APK: $APK"
+          ls -lh "$APK"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eco-school-apk
+          path: flutter_app/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30

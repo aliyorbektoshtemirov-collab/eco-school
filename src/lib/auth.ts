@@ -25,7 +25,7 @@ export function iterations(env: Env): number {
  * Sessiya tokeni: <tasodifiy>.<imzo>. Bazada faqat sha256(token) saqlanadi,
  * ya'ni baza o'g'irlansa ham tokenlar bilan kirib bo'lmaydi.
  */
-export async function createSession(c: Ctx, userId: number): Promise<void> {
+export async function createSession(c: Ctx, userId: number): Promise<string> {
   const raw = randomToken(32);
   const sig = (await hmac(c.env.SESSION_SECRET, raw)).slice(0, 32);
   const token = `${raw}.${sig}`;
@@ -42,10 +42,13 @@ export async function createSession(c: Ctx, userId: number): Promise<void> {
     path: '/',
     maxAge,
   });
+
+  // Mobil ilova cookie o'rniga shu tokenni sarlavhada yuboradi
+  return token;
 }
 
 export async function destroySession(c: Ctx): Promise<void> {
-  const token = getCookie(c, COOKIE_NAME);
+  const token = sessionToken(c);
   if (token) {
     await c.env.DB.prepare(`DELETE FROM sessions WHERE id = ?`).bind(await sha256(token)).run();
   }
@@ -56,9 +59,27 @@ export async function destroyAllSessions(env: Env, userId: number): Promise<void
   await env.DB.prepare(`DELETE FROM sessions WHERE user_id = ?`).bind(userId).run();
 }
 
-/** Cookie bo'yicha foydalanuvchini aniqlaydi. Topilmasa null. */
+/**
+ * Sessiya tokeni qayerdan olinadi.
+ *
+ * Brauzer — cookie'da (HttpOnly, JS o'qiy olmaydi).
+ * Mobil ilova — `Authorization: Bearer <token>` sarlavhasida: telefonda
+ * cookie saqlash ishonchsiz va CSRF xavfi ham yo'q.
+ */
+export function bearerToken(c: Ctx): string | null {
+  const header = c.req.header('authorization') ?? '';
+  if (!header.toLowerCase().startsWith('bearer ')) return null;
+  const token = header.slice(7).trim();
+  return token.length > 0 && token.length <= 200 ? token : null;
+}
+
+export function sessionToken(c: Ctx): string | null {
+  return bearerToken(c) ?? getCookie(c, COOKIE_NAME) ?? null;
+}
+
+/** Foydalanuvchini aniqlaydi. Topilmasa null. */
 export async function currentUser(c: Ctx): Promise<SessionUser | null> {
-  const token = getCookie(c, COOKIE_NAME);
+  const token = sessionToken(c);
   if (!token || token.length > 200) return null;
 
   const [raw, sig] = token.split('.');
@@ -121,6 +142,10 @@ export const csrfGuard: MiddlewareHandler<{ Bindings: Env; Variables: Variables 
   next,
 ) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(c.req.method.toUpperCase())) return next();
+
+  // Mobil ilova cookie ishlatmaydi — CSRF hujumi ham bo'lishi mumkin emas,
+  // chunki tokenni boshqa sayt o'qiy olmaydi va o'zi qo'sha olmaydi.
+  if (bearerToken(c as Ctx)) return next();
 
   const host = new URL(c.req.url).host;
   const source = c.req.header('origin') || c.req.header('referer');

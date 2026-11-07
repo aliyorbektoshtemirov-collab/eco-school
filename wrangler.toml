@@ -42,7 +42,7 @@ POINTS_PER_KG = "25"
 # TELEGRAM_BOT_USERNAME = "eco_school_bot"
 # Kanal: yangi vazifa, marafon kunlari va e'lonlar shu yerga ham joylanadi.
 # Bot kanalga admin qilinishi kerak. Yopiq kanal bo'lsa -100... raqami yoziladi.
-# TELEGRAM_CHANNEL = "@eco_school_andijon"
+TELEGRAM_CHANNEL = "@ecofutureandijan"
 # Android ilovasi imzosining SHA-256 izi (APK yig'ilgandan keyin olinadi).
 # Bo'sh bo'lsa ilova ishlayveradi, lekin tepada brauzer qatori chiqadi.
 # ANDROID_PACKAGE = "uz.ecoschool.app"

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import type { Env, SessionUser, Variables } from '../types';
 import { hashPassword, verifyPassword } from '../lib/crypto';
 import { clientIp, fail, ok } from '../lib/http';
@@ -7,6 +8,19 @@ import {
   createSession, currentUser, destroySession, iterations, loadUser, requireAuth, USER_FIELDS,
 } from '../lib/auth';
 import { clearLimit, limit } from '../lib/ratelimit';
+
+type Ctx = Context<{ Bindings: Env; Variables: Variables }>;
+
+/**
+ * Mobil ilovaga sessiya tokenini ham qaytaramiz.
+ *
+ * Brauzer cookie bilan ishlaydi va tokenni ko'rmaydi; ilova esa
+ * `X-Eco-Client: mobile` deb so'rasa, tokenni olib, keyingi so'rovlarda
+ * `Authorization: Bearer ...` sarlavhasida yuboradi.
+ */
+function withToken(c: Ctx, body: Record<string, unknown>, token: string) {
+  return c.req.header('x-eco-client') === 'mobile' ? { ...body, token } : body;
+}
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -73,8 +87,8 @@ app.post('/setup', async (c) => {
     .run();
 
   const id = Number(res.meta.last_row_id);
-  await createSession(c, id);
-  return c.json(ok({ user: await loadUser(c.env, id) }), 201);
+  const token = await createSession(c, id);
+  return c.json(ok(withToken(c, { user: await loadUser(c.env, id) }, token)), 201);
 });
 
 // ------------------------------------------------------------------ ro'yxatdan o'tish
@@ -119,8 +133,8 @@ app.post('/register', async (c) => {
     .run();
 
   const id = Number(res.meta.last_row_id);
-  await createSession(c, id);
-  return c.json(ok({ user: await loadUser(c.env, id) }), 201);
+  const token = await createSession(c, id);
+  return c.json(ok(withToken(c, { user: await loadUser(c.env, id) }, token)), 201);
 });
 
 // ------------------------------------------------------------------ kirish
@@ -154,9 +168,9 @@ app.post('/login', async (c) => {
   await c.env.DB.prepare(`UPDATE profiles SET last_login_at = datetime('now') WHERE id = ?`)
     .bind(row.id)
     .run();
-  await createSession(c, row.id);
+  const token = await createSession(c, row.id);
 
-  return c.json(ok({ user: await loadUser(c.env, row.id) }));
+  return c.json(ok(withToken(c, { user: await loadUser(c.env, row.id) }, token)));
 });
 
 app.post('/logout', async (c) => {
