@@ -1,0 +1,8 @@
+# Lokal ishlab chiqish uchun. `.dev.vars` nomi bilan nusxalang.
+SESSION_SECRET="bu-yerga-uzun-tasodifiy-kalit-qoying-kamida-32-belgi"
+SETUP_KEY="birinchi-owner-uchun-maxfiy-kalit"
+
+# Telegram bot (ixtiyoriy). Bo'sh qoldirilsa bot o'chiq turadi.
+# TELEGRAM_BOT_TOKEN="BotFather bergan token"
+# TELEGRAM_WEBHOOK_SECRET="uzun-tasodifiy-matn"
+# TELEGRAM_BOT_USERNAME="eco_school_bot"

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">ECO SCHOOL</string>
+
+  <!-- Sayt ilovaga tegishli ekanini tasdiqlaydi. Manzil shu yerda ham
+       bo'lishi kerak, aks holda tepada brauzer qatori chiqib qoladi. -->
+  <string name="asset_statements" translatable="false">
+    [{
+      \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+      \"target\": {
+        \"namespace\": \"web\",
+        \"site\": \"@string/site_url\"
+      }
+    }]
+  </string>
+</resources>

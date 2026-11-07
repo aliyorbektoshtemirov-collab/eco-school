@@ -1,0 +1,26 @@
+{
+  "name": "eco-school",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ECO SCHOOL — React + Tailwind + Cloudflare Workers (D1, R2)",
+  "scripts": {
+    "setup": "npm install && npm --prefix web install",
+    "dev:web": "npm --prefix web run dev",
+    "dev": "npm run build:web && wrangler dev",
+    "build:web": "npm --prefix web run build",
+    "build": "npm run build:web",
+    "deploy": "npm run build:web && wrangler deploy",
+    "db:create": "wrangler d1 create eco-school-v2",
+    "r2:create": "wrangler r2 bucket create eco-school-files",
+    "db:local": "wrangler d1 migrations apply eco-school-v2 --local",
+    "db:remote": "wrangler d1 migrations apply eco-school-v2 --remote",
+    "tail": "wrangler tail"
+  },
+  "dependencies": { "hono": "^4.6.14" },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.0.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.0.0"
+  }
+}

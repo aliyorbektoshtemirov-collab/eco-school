@@ -1,0 +1,25 @@
+{
+  "name": "ECO SCHOOL",
+  "short_name": "ECO SCHOOL",
+  "description": "Maktab ekologiya platformasi — vazifalar, recycling, reyting.",
+  "lang": "uz",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f5ef",
+  "theme_color": "#2f5d3a",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Vazifalar", "url": "/challenges" },
+    { "name": "Marafon", "url": "/marafon" },
+    { "name": "Reyting", "url": "/leaderboard" }
+  ]
+}

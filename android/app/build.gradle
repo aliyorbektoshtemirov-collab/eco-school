@@ -1,0 +1,54 @@
+plugins { id "com.android.application" }
+
+def site = providers.gradleProperty("siteUrl").get()
+def host = new URI(site).getHost()
+
+android {
+  namespace "uz.ecoschool.app"
+  compileSdk 34
+
+  defaultConfig {
+    applicationId "uz.ecoschool.app"
+    minSdk 21
+    targetSdk 34
+    versionCode providers.gradleProperty("appVersionCode").get() as Integer
+    versionName providers.gradleProperty("appVersionName").get()
+
+    // Sayt manzili resurslarga shu yerdan tushadi
+    resValue "string", "site_url", site
+    resValue "string", "site_host", host
+  }
+
+  signingConfigs {
+    release {
+      // Kalit fayli bo'lsa — imzolanadi, bo'lmasa debug kalit ishlatiladi
+      if (System.getenv("KEYSTORE_PATH")) {
+        storeFile file(System.getenv("KEYSTORE_PATH"))
+        storePassword System.getenv("KEYSTORE_PASSWORD")
+        keyAlias System.getenv("KEY_ALIAS")
+        keyPassword System.getenv("KEY_PASSWORD")
+      }
+    }
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+      signingConfig System.getenv("KEYSTORE_PATH")
+        ? signingConfigs.release
+        : signingConfigs.debug
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+dependencies {
+  // Trusted Web Activity: sayt Chrome dvigatelida, manzil qatorisiz ochiladi.
+  // WebView emas — shuning uchun rasm yuklash, kamera va cookie'lar
+  // brauzerdagidek ishlaydi.
+  implementation "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
+}

@@ -1,0 +1,62 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "eco-school"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+workers_dev = true
+
+[observability]
+enabled = true
+
+# ---------------------------------------------------------------- React build
+[assets]
+directory = "./web/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# ---------------------------------------------------------------- D1 baza
+# `npm run db:create` natijasidagi database_id ni shu yerga qo'ying.
+[[d1_databases]]
+binding = "DB"
+database_name = "eco-school-v2"
+database_id = "9716bb3a-45f6-4602-8a11-b4cde97cb27e"
+migrations_dir = "migrations"
+
+# ---------------------------------------------------------------- R2 (dalil rasmlari)
+# `npm run r2:create` bilan yaratiladi. R2 yoqilmagan bo'lsa, shu uch
+# qatorni izohga oling — sayt rasmsiz ishlayveradi.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "eco-school-files"
+
+# ---------------------------------------------------------------- o'zgaruvchilar
+[vars]
+APP_NAME = "ECO SCHOOL"
+SESSION_TTL_DAYS = "30"
+PBKDF2_ITERATIONS = "100000"
+MAX_UPLOAD_BYTES = "5000000"
+POINTS_PER_KG = "25"
+# Bot xabarlaridagi havolalar uchun. Domen ulagach, shu yerga yozing.
+# SITE_URL = "https://eco.bugunbor.uz"
+# Bot nomi @ belgisisiz — profil sahifasida havola chiqishi uchun.
+# TELEGRAM_BOT_USERNAME = "eco_school_bot"
+# Kanal: yangi vazifa, marafon kunlari va e'lonlar shu yerga ham joylanadi.
+# Bot kanalga admin qilinishi kerak. Yopiq kanal bo'lsa -100... raqami yoziladi.
+# TELEGRAM_CHANNEL = "@eco_school_andijon"
+# Android ilovasi imzosining SHA-256 izi (APK yig'ilgandan keyin olinadi).
+# Bo'sh bo'lsa ilova ishlayveradi, lekin tepada brauzer qatori chiqadi.
+# ANDROID_PACKAGE = "uz.ecoschool.app"
+# ANDROID_FINGERPRINT = "AA:BB:CC:..."
+
+# ---------------------------------------------------------------- tozalash
+[triggers]
+# 03:00 UTC — tozalash; 04:00 UTC dushanba — haftalik eslatma (Toshkent 09:00)
+crons = ["0 3 * * *", "0 4 * * 1", "0 11 * * *"]
+
+# ---------------------------------------------------------------- MAXFIY kalitlar
+#   npx wrangler secret put SESSION_SECRET
+#   npx wrangler secret put SETUP_KEY
+#
+# Telegram bot (ixtiyoriy — sozlanmasa bot butunlay o'chiq turadi):
+#   npx wrangler secret put TELEGRAM_BOT_TOKEN       <- @BotFather bergan token
+#   npx wrangler secret put TELEGRAM_WEBHOOK_SECRET  <- o'zingiz o'ylagan uzun matn
