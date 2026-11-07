@@ -29,6 +29,11 @@ class EcoUser {
 
 /// Kirish holati. Ilovaning hamma joyidan shu kuzatiladi.
 class Session extends ChangeNotifier {
+  Session() {
+    // Token eskirsa ilova o'zi kirish ekraniga qaytadi.
+    Api.instance.onExpired = _dropSession;
+  }
+
   EcoUser? _user;
   bool _loading = true;
 
@@ -48,10 +53,21 @@ class Session extends ChangeNotifier {
 
     try {
       final res = await Api.instance.get('/auth/me');
-      _user = EcoUser(res['user'] as Map<String, dynamic>);
+      final raw = res['user'];
+
+      if (raw is Map<String, dynamic>) {
+        _user = EcoUser(raw);
+      } else {
+        // Server 200 qaytaradi-yu, foydalanuvchi yo'q — token yaroqsiz.
+        await Api.instance.saveToken(null);
+        _user = null;
+      }
+    } on ApiException catch (e) {
+      // Internet yo'q bo'lsa tokenni saqlab qolamiz — keyin qayta urinamiz.
+      // Faqat token haqiqatan yaroqsiz bo'lsagina o'chiramiz.
+      if (!e.offline) await Api.instance.saveToken(null);
+      _user = null;
     } catch (_) {
-      // Token eskirgan yoki internet yo'q — kirish ekraniga qaytamiz
-      await Api.instance.saveToken(null);
       _user = null;
     }
 
@@ -86,11 +102,27 @@ class Session extends ChangeNotifier {
     await _accept(res);
   }
 
-  Future<void> _accept(Map<String, dynamic> res) async {
-    final token = res['token'] as String?;
-    if (token != null) await Api.instance.saveToken(token);
+  EcoUser _read(Map<String, dynamic> res) {
+    final raw = res['user'];
+    if (raw is! Map<String, dynamic>) {
+      throw ApiException(0, 'Server javobi tushunarsiz. Qayta urining.');
+    }
+    return EcoUser(raw);
+  }
 
-    _user = EcoUser(res['user'] as Map<String, dynamic>);
+  Future<void> _accept(Map<String, dynamic> res) async {
+    final user = _read(res);
+
+    final token = res['token'];
+    if (token is String && token.isNotEmpty) {
+      await Api.instance.saveToken(token);
+    } else {
+      // Token kelmasa keyingi so'rovlar baribir rad etiladi —
+      // sababini shu yerda aytganimiz ma'qul.
+      throw ApiException(0, 'Server kirish kalitini bermadi. Ilovani yangilang.');
+    }
+
+    _user = user;
     notifyListeners();
   }
 
@@ -98,8 +130,14 @@ class Session extends ChangeNotifier {
   Future<void> refresh() async {
     try {
       final res = await Api.instance.get('/auth/me');
-      _user = EcoUser(res['user'] as Map<String, dynamic>);
-      notifyListeners();
+      final raw = res['user'];
+
+      if (raw is Map<String, dynamic>) {
+        _user = EcoUser(raw);
+        notifyListeners();
+      } else {
+        _dropSession();
+      }
     } catch (_) {
       // jim o'tkazamiz — bu yordamchi yangilash
     }
@@ -112,6 +150,14 @@ class Session extends ChangeNotifier {
       // server javob bermasa ham telefondan chiqamiz
     }
     await Api.instance.saveToken(null);
+    _user = null;
+    notifyListeners();
+  }
+
+  /// Token yaroqsiz bo'lib qolganda — serverga murojaat qilmaymiz.
+  void _dropSession() {
+    if (_user == null) return;
+    Api.instance.saveToken(null);
     _user = null;
     notifyListeners();
   }

@@ -147,6 +147,16 @@ export const csrfGuard: MiddlewareHandler<{ Bindings: Env; Variables: Variables 
   // chunki tokenni boshqa sayt o'qiy olmaydi va o'zi qo'sha olmaydi.
   if (bearerToken(c as Ctx)) return next();
 
+  // Kirish va ro'yxatdan o'tishda ilovada hali token yo'q. Bunday so'rovni
+  // ham o'tkazamiz, lekin faqat ikki shart bajarilganda:
+  //   1) `X-Eco-Client: mobile` sarlavhasi bor — brauzerdagi oddiy <form>
+  //      hujumi bunday sarlavha qo'sha olmaydi, fetch esa preflight'ga
+  //      tushadi va biz CORS ruxsatini bermaymiz;
+  //   2) so'rovda sessiya cookie'si yo'q — demak o'g'irlab ishlatiladigan
+  //      tayyor sessiya ham yo'q.
+  const mobile = c.req.header('x-eco-client') === 'mobile';
+  if (mobile && !getCookie(c, COOKIE_NAME)) return next();
+
   const host = new URL(c.req.url).host;
   const source = c.req.header('origin') || c.req.header('referer');
   if (!source) fail(403, "So'rov manbasi aniqlanmadi.", 'csrf');

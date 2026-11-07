@@ -351,6 +351,7 @@ class _PasswordSheetState extends State<_PasswordSheet> {
   final _current = TextEditingController();
   final _next = TextEditingController();
   final _repeat = TextEditingController();
+  bool _obscure = true;
   bool _busy = false;
   String? _error;
 
@@ -387,9 +388,10 @@ class _PasswordSheetState extends State<_PasswordSheet> {
         Navigator.pop(context);
         showNote(context, res['message'] as String? ?? 'Parol almashtirildi.');
       }
-    } on ApiException catch (e) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = errorText(e);
         _busy = false;
       });
     }
@@ -414,25 +416,34 @@ class _PasswordSheetState extends State<_PasswordSheet> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Eco.ink),
             ),
             const SizedBox(height: 18),
-            TextField(
+            // Bu yerda avtoto'ldirish o'chirilgan: telefon saqlangan parolni
+            // uchala maydonga ham qo'yib yuborardi.
+            PasswordField(
               controller: _current,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Hozirgi parol'),
+              obscure: _obscure,
+              label: 'Hozirgi parol',
+              hints: const [],
+              enabled: !_busy,
+              onToggle: () => setState(() => _obscure = !_obscure),
             ),
             const SizedBox(height: 12),
-            TextField(
+            PasswordField(
               controller: _next,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Yangi parol',
-                helperText: 'Kamida 8 ta belgi',
-              ),
+              obscure: _obscure,
+              label: 'Yangi parol',
+              helper: 'Kamida 8 ta belgi',
+              hints: const [],
+              enabled: !_busy,
+              onToggle: () => setState(() => _obscure = !_obscure),
             ),
             const SizedBox(height: 12),
-            TextField(
+            PasswordField(
               controller: _repeat,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Takrorlang'),
+              obscure: _obscure,
+              label: 'Takrorlang',
+              hints: const [],
+              enabled: !_busy,
+              onToggle: () => setState(() => _obscure = !_obscure),
             ),
             if (_error != null) ...[
               const SizedBox(height: 14),

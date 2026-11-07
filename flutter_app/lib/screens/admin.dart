@@ -119,8 +119,8 @@ class _ChallengeReviewState extends State<ChallengeReview> {
     try {
       final res = await Api.instance.get('/challenges/admin/list');
       setState(() => _items = res['items'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -146,8 +146,8 @@ class _ChallengeReviewState extends State<ChallengeReview> {
       if (mounted) showNote(context, res['message'] as String? ?? 'Saqlandi.');
       await _load();
       widget.onChanged();
-    } on ApiException catch (e) {
-      if (mounted) showNote(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -234,8 +234,8 @@ class _RecyclingReviewState extends State<RecyclingReview> {
     try {
       final res = await Api.instance.get('/recycling/admin/list');
       setState(() => _items = res['items'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -299,8 +299,8 @@ class _RecyclingReviewState extends State<RecyclingReview> {
       if (mounted) showNote(context, res['message'] as String? ?? 'Tasdiqlandi.');
       await _load();
       widget.onChanged();
-    } on ApiException catch (e) {
-      if (mounted) showNote(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -323,8 +323,8 @@ class _RecyclingReviewState extends State<RecyclingReview> {
       if (mounted) showNote(context, res['message'] as String? ?? 'Rad etildi.');
       await _load();
       widget.onChanged();
-    } on ApiException catch (e) {
-      if (mounted) showNote(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
     }
     if (mounted) setState(() => _busy = false);
   }

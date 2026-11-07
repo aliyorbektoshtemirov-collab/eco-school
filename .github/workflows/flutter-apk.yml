@@ -50,6 +50,12 @@ jobs:
       - name: Kutubxonalar
         run: flutter pub get
 
+      # Kodni tekshirish. Yig'ilishni to'xtatmaydi — ogohlantirishlar
+      # logda ko'rinib tursin, xato bo'lsa keyingi qadam baribir yiqiladi.
+      - name: Kodni tekshirish
+        continue-on-error: true
+        run: flutter analyze --no-pub
+
       - name: Ikonkalar
         run: dart run flutter_launcher_icons
 

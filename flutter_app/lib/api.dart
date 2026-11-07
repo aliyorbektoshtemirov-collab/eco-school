@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,10 +13,23 @@ class ApiException implements Exception {
   final String message;
   final String? code;
 
-  bool get unauthenticated => status == 401;
+  /// Sessiya tugagan yoki token yaroqsiz.
+  bool get expired => status == 401 && code == 'unauthenticated';
+
+  /// Internet yoki server bilan bog'liq, qaytadan urinib ko'rish mumkin.
+  bool get offline => status == 0;
 
   @override
   String toString() => message;
+}
+
+/// Har qanday xatoni ekranga chiqsa bo'ladigan matnga aylantiradi.
+///
+/// Ekranlarda `catch (e)` deb ushlanadi: kutilmagan xato chiqsa ham
+/// yuklanish aylanasi qotib qolmasligi kerak.
+String errorText(Object error) {
+  if (error is ApiException) return error.message;
+  return 'Nimadir xato ketdi. Qaytadan urinib ko‘ring.';
 }
 
 /// Worker API bilan ishlash.
@@ -39,23 +53,38 @@ class Api {
   String? _token;
   String? get token => _token;
 
+  /// Sessiya tugaganda chaqiriladi — ilova kirish ekraniga qaytadi.
+  /// `main.dart` da Session ga ulanadi.
+  void Function()? onExpired;
+
   Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString(_tokenKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _token = prefs.getString(_tokenKey);
+    } catch (_) {
+      _token = null;
+    }
   }
 
   Future<void> saveToken(String? value) async {
     _token = value;
-    final prefs = await SharedPreferences.getInstance();
-    if (value == null) {
-      await prefs.remove(_tokenKey);
-    } else {
-      await prefs.setString(_tokenKey, value);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (value == null) {
+        await prefs.remove(_tokenKey);
+      } else {
+        await prefs.setString(_tokenKey, value);
+      }
+    } catch (_) {
+      // Xotiraga yozib bo'lmasa ham joriy sessiya ishlayveradi.
     }
   }
 
   Map<String, String> _headers({bool json = true}) {
-    final headers = <String, String>{'X-Eco-Client': 'mobile'};
+    final headers = <String, String>{
+      'X-Eco-Client': 'mobile',
+      'Accept': 'application/json',
+    };
     if (json) headers['Content-Type'] = 'application/json';
     if (_token != null) headers['Authorization'] = 'Bearer $_token';
     return headers;
@@ -63,10 +92,28 @@ class Api {
 
   Uri _uri(String path) => Uri.parse('$baseUrl/api$path');
 
+  /// Hamma so'rov shu yerdan o'tadi: tarmoq xatolari tushunarli
+  /// xabarga aylantiriladi va hech qachon ushlanmay qolmaydi.
+  Future<Map<String, dynamic>> _run(Future<http.Response> Function() send) async {
+    try {
+      return _decode(await send());
+    } on TimeoutException {
+      throw ApiException(0, 'Server javob bermadi. Aloqani tekshirib, qayta urining.');
+    } on SocketException {
+      throw ApiException(0, 'Internet aloqasi yo‘q.');
+    } on HandshakeException {
+      throw ApiException(0, 'Xavfsiz ulanish o‘rnatilmadi. Telefon sanasi to‘g‘riligini tekshiring.');
+    } on http.ClientException {
+      throw ApiException(0, 'Serverga ulanib bo‘lmadi. Qayta urining.');
+    } on IOException {
+      throw ApiException(0, 'Aloqa uzildi. Qayta urining.');
+    }
+  }
+
   Map<String, dynamic> _decode(http.Response res) {
     Map<String, dynamic> body;
     try {
-      final parsed = jsonDecode(res.body);
+      final parsed = jsonDecode(utf8.decode(res.bodyBytes));
       body = parsed is Map<String, dynamic> ? parsed : <String, dynamic>{};
     } catch (_) {
       body = <String, dynamic>{};
@@ -76,75 +123,75 @@ class Api {
 
     final message = body['error'] is String
         ? body['error'] as String
-        : 'Xatolik yuz berdi (${res.statusCode}).';
+        : _statusText(res.statusCode);
 
-    throw ApiException(res.statusCode, message, body['code'] as String?);
+    final error = ApiException(res.statusCode, message, body['code'] as String?);
+
+    // Token eskirgan bo'lsa kirish ekraniga qaytamiz. Parol almashtirishdagi
+    // "joriy parol noto'g'ri" ham 401 qaytaradi — u `code` siz keladi,
+    // shuning uchun bu yerda chiqib ketmaymiz.
+    if (error.expired && _token != null) onExpired?.call();
+
+    throw error;
   }
 
-  Future<Map<String, dynamic>> get(String path) async {
-    try {
-      final res = await http
-          .get(_uri(path), headers: _headers(json: false))
-          .timeout(const Duration(seconds: 25));
-      return _decode(res);
-    } on SocketException {
-      throw ApiException(0, 'Internet aloqasi yo‘q.');
-    }
+  String _statusText(int status) {
+    if (status == 413) return 'Fayl juda katta.';
+    if (status == 429) return 'Juda ko‘p urinish bo‘ldi. Biroz kutib turing.';
+    if (status >= 500) return 'Serverda nosozlik. Birozdan so‘ng qayta urining.';
+    return 'Xatolik yuz berdi ($status).';
   }
 
-  Future<Map<String, dynamic>> post(String path, [Map<String, dynamic>? body]) async {
-    try {
-      final res = await http
-          .post(_uri(path), headers: _headers(), body: jsonEncode(body ?? const {}))
-          .timeout(const Duration(seconds: 25));
-      return _decode(res);
-    } on SocketException {
-      throw ApiException(0, 'Internet aloqasi yo‘q.');
-    }
+  Future<Map<String, dynamic>> get(String path) {
+    return _run(() => http
+        .get(_uri(path), headers: _headers(json: false))
+        .timeout(const Duration(seconds: 25)));
   }
 
-  Future<Map<String, dynamic>> put(String path, [Map<String, dynamic>? body]) async {
-    try {
-      final res = await http
-          .put(_uri(path), headers: _headers(), body: jsonEncode(body ?? const {}))
-          .timeout(const Duration(seconds: 25));
-      return _decode(res);
-    } on SocketException {
-      throw ApiException(0, 'Internet aloqasi yo‘q.');
-    }
+  Future<Map<String, dynamic>> post(String path, [Map<String, dynamic>? body]) {
+    return _run(() => http
+        .post(_uri(path), headers: _headers(), body: jsonEncode(body ?? const {}))
+        .timeout(const Duration(seconds: 30)));
   }
 
-  Future<Map<String, dynamic>> delete(String path) async {
-    try {
-      final res = await http
-          .delete(_uri(path), headers: _headers(json: false))
-          .timeout(const Duration(seconds: 25));
-      return _decode(res);
-    } on SocketException {
-      throw ApiException(0, 'Internet aloqasi yo‘q.');
-    }
+  Future<Map<String, dynamic>> put(String path, [Map<String, dynamic>? body]) {
+    return _run(() => http
+        .put(_uri(path), headers: _headers(), body: jsonEncode(body ?? const {}))
+        .timeout(const Duration(seconds: 30)));
+  }
+
+  Future<Map<String, dynamic>> delete(String path) {
+    return _run(() => http
+        .delete(_uri(path), headers: _headers(json: false))
+        .timeout(const Duration(seconds: 25)));
   }
 
   /// Rasm yuklash: fayl baytlari to'g'ridan-to'g'ri yuboriladi,
   /// javobda R2 kaliti qaytadi.
   Future<String> uploadImage(File file) async {
-    final bytes = await file.readAsBytes();
+    List<int> bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      throw ApiException(0, 'Rasmni o‘qib bo‘lmadi. Boshqasini tanlang.');
+    }
 
     final headers = <String, String>{
       'X-Eco-Client': 'mobile',
+      'Accept': 'application/json',
       'Content-Type': 'application/octet-stream',
     };
     if (_token != null) headers['Authorization'] = 'Bearer $_token';
 
-    try {
-      final res = await http
-          .post(_uri('/uploads'), headers: headers, body: bytes)
-          .timeout(const Duration(seconds: 60));
-      final body = _decode(res);
-      return body['key'] as String;
-    } on SocketException {
-      throw ApiException(0, 'Internet aloqasi yo‘q.');
+    final body = await _run(() => http
+        .post(_uri('/uploads'), headers: headers, body: bytes)
+        .timeout(const Duration(seconds: 90)));
+
+    final key = body['key'];
+    if (key is! String || key.isEmpty) {
+      throw ApiException(0, 'Rasm yuklanmadi. Qayta urining.');
     }
+    return key;
   }
 
   /// Yuklangan rasmni ko'rsatish uchun manzil.

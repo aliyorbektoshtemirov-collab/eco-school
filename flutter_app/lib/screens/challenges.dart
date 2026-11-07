@@ -18,6 +18,7 @@ class ChallengesScreen extends StatefulWidget {
 
 class _ChallengesScreenState extends State<ChallengesScreen> {
   List<dynamic> _challenges = const [];
+  List<dynamic> _announcements = const [];
   Map<int, Map<String, dynamic>> _submissions = const {};
   bool _loading = true;
   String? _error;
@@ -46,8 +47,18 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         _challenges = res['challenges'] as List? ?? const [];
         _submissions = subs;
       });
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
+    }
+
+    // E'lonlar — chiqmasa ham vazifalar ro'yxatiga xalaqit bermasin.
+    try {
+      final res = await Api.instance.get('/announcements');
+      if (mounted) {
+        setState(() => _announcements = res['announcements'] as List? ?? const []);
+      }
+    } catch (_) {
+      // jim o'tkazamiz
     }
 
     if (mounted) setState(() => _loading = false);
@@ -89,29 +100,103 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
     if (_loading) return const Loading();
     if (_error != null) return ErrorNote(message: _error!, onRetry: _load);
 
-    if (_challenges.isEmpty) {
-      return const EmptyNote(
-        icon: Icons.task_alt_outlined,
-        title: 'Hozircha vazifa yo‘q',
-        hint: 'Yangi vazifa qo‘shilganda shu yerda paydo bo‘ladi.',
-      );
-    }
-
-    return ListView.separated(
+    return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      itemCount: _challenges.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final challenge = _challenges[index] as Map<String, dynamic>;
-        final id = (challenge['id'] as num).toInt();
-        final submission = _submissions[id];
+      children: [
+        ..._announcements.whereType<Map<String, dynamic>>().map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _AnnouncementCard(item: item),
+              ),
+            ),
+        if (_challenges.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: EmptyNote(
+              icon: Icons.task_alt_outlined,
+              title: 'Hozircha vazifa yo‘q',
+              hint: 'Yangi vazifa qo‘shilganda shu yerda paydo bo‘ladi.',
+            ),
+          )
+        else
+          ..._challenges.whereType<Map<String, dynamic>>().map((challenge) {
+            final id = (challenge['id'] as num?)?.toInt() ?? 0;
 
-        return _ChallengeCard(
-          challenge: challenge,
-          submission: submission,
-          onSubmit: () => _submit(challenge),
-        );
-      },
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ChallengeCard(
+                challenge: challenge,
+                submission: _submissions[id],
+                onSubmit: () => _submit(challenge),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+}
+
+/// Adminlar e'loni — saytdagi banner o'rnida.
+class _AnnouncementCard extends StatelessWidget {
+  const _AnnouncementCard({required this.item});
+
+  final Map<String, dynamic> item;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = item['title'] as String? ?? '';
+    final body = item['body'] as String? ?? '';
+    final link = item['link'] as String? ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Eco.amberTint,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF0E2BE)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.campaign_outlined, size: 21, color: Eco.amber),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: Eco.ink,
+                    height: 1.3,
+                  ),
+                ),
+                if (body.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    body,
+                    style: const TextStyle(fontSize: 14, height: 1.5, color: Eco.muted),
+                  ),
+                ],
+                if (link.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  SelectableText(
+                    link,
+                    style: const TextStyle(fontSize: 13, color: Eco.green),
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  shortDate(item['created_at']),
+                  style: const TextStyle(fontSize: 12, color: Eco.faint),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -278,9 +363,10 @@ class _SubmitSheetState extends State<_SubmitSheet> {
         Navigator.pop(context, true);
         showNote(context, res['message'] as String? ?? 'Yuborildi.');
       }
-    } on ApiException catch (e) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = errorText(e);
         _busy = false;
       });
     }

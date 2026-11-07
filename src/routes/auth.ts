@@ -25,6 +25,20 @@ function withToken(c: Ctx, body: Record<string, unknown>, token: string) {
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
+ * Maktablar ro'yxati.
+ *
+ * Ilovada o'quvchi maktab kodini yoddan yozmaydi: ro'yxat shu yerdan
+ * olinadi va bitta maktab bo'lsa o'zi tanlanadi.
+ */
+app.get('/schools', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT code, name FROM schools ORDER BY id LIMIT 50`,
+  ).all<{ code: string; name: string }>();
+
+  return c.json(ok({ schools: results ?? [] }));
+});
+
+/**
  * Maktab kodiga qarab sinflar ro'yxati.
  * Asl saytdagi "Sinflarni yuklash" tugmasi shu yerga murojaat qiladi.
  */

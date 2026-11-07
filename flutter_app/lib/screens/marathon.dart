@@ -34,8 +34,8 @@ class _MarathonScreenState extends State<MarathonScreen> {
     try {
       final res = await Api.instance.get('/marathons');
       setState(() => _marathons = res['marathons'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -48,8 +48,8 @@ class _MarathonScreenState extends State<MarathonScreen> {
       final res = await Api.instance.post('/marathons/$id/join');
       if (mounted) showNote(context, res['message'] as String? ?? 'Qo‘shildingiz.');
       await _load();
-    } on ApiException catch (e) {
-      if (mounted) showNote(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -69,8 +69,8 @@ class _MarathonScreenState extends State<MarathonScreen> {
 
       await _load();
       await session.refresh();
-    } on ApiException catch (e) {
-      if (mounted) showNote(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
     }
     if (mounted) setState(() => _busy = false);
   }

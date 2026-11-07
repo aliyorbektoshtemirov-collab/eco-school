@@ -49,8 +49,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         _students = students['students'] as List? ?? const [];
         _classes = classes['classes'] as List? ?? const [];
       });
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);

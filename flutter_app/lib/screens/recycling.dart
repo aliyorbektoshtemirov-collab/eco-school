@@ -37,8 +37,8 @@ class _RecyclingScreenState extends State<RecyclingScreen> {
     try {
       final res = await Api.instance.get('/recycling');
       setState(() => _items = res['submissions'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -247,9 +247,10 @@ class _RecyclingSheetState extends State<_RecyclingSheet> {
         Navigator.pop(context, true);
         showNote(context, res['message'] as String? ?? 'Yuborildi.');
       }
-    } on ApiException catch (e) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = errorText(e);
         _busy = false;
       });
     }

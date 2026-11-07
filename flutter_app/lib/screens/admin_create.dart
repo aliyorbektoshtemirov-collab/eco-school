@@ -32,8 +32,8 @@ class _TaskAdminState extends State<TaskAdmin> {
     try {
       final res = await Api.instance.get('/challenges/admin/challenges');
       setState(() => _items = res['challenges'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -182,9 +182,10 @@ class _TaskSheetState extends State<_TaskSheet> {
         Navigator.pop(context, true);
         showNote(context, res['message'] as String? ?? 'Saqlandi.');
       }
-    } on ApiException catch (e) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = errorText(e);
         _busy = false;
       });
     }
@@ -273,8 +274,8 @@ class _MarathonAdminState extends State<MarathonAdmin> {
     try {
       final res = await Api.instance.get('/admin/marathons');
       setState(() => _items = res['marathons'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -306,8 +307,8 @@ class _MarathonAdminState extends State<MarathonAdmin> {
       final res = await Api.instance.post('/admin/marathons/$id/finish');
       if (mounted) showNote(context, res['message'] as String? ?? 'Yakunlandi.');
       await _load();
-    } on ApiException catch (e) {
-      if (mounted) showNote(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
     }
   }
 
@@ -479,9 +480,10 @@ class _MarathonSheetState extends State<_MarathonSheet> {
         Navigator.pop(context, true);
         showNote(context, res['message'] as String? ?? 'E’lon qilindi.');
       }
-    } on ApiException catch (e) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = errorText(e);
         _busy = false;
       });
     }
@@ -604,8 +606,8 @@ class _AnnouncementAdminState extends State<AnnouncementAdmin> {
     try {
       final res = await Api.instance.get('/admin/announcements');
       setState(() => _items = res['announcements'] as List? ?? const []);
-    } on ApiException catch (e) {
-      setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(e));
     }
 
     if (mounted) setState(() => _loading = false);
@@ -737,9 +739,10 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
         Navigator.pop(context, true);
         showNote(context, res['message'] as String? ?? 'Yuborildi.');
       }
-    } on ApiException catch (e) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = e.message;
+        _error = errorText(e);
         _busy = false;
       });
     }

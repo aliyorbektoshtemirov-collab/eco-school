@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'theme.dart';
 
@@ -230,4 +231,129 @@ Future<bool> confirm(
   );
 
   return answer ?? false;
+}
+
+/* ================================================ forma maydonlari */
+
+/// Login maydoni — ikkala bo'limda bir xil qoidalar bilan.
+class UsernameField extends StatelessWidget {
+  const UsernameField({
+    super.key,
+    required this.controller,
+    this.focusNode,
+    this.helper,
+    this.enabled = true,
+    this.textInputAction,
+    this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String? helper;
+  final bool enabled;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      enabled: enabled,
+      autocorrect: false,
+      enableSuggestions: false,
+      textCapitalization: TextCapitalization.none,
+      textInputAction: textInputAction,
+      autofillHints: const [AutofillHints.username],
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9._]')),
+        LengthLimitingTextInputFormatter(24),
+      ],
+      decoration: InputDecoration(
+        labelText: 'Login',
+        hintText: 'a.valiyev',
+        helperText: helper,
+      ),
+      onSubmitted: onSubmitted,
+    );
+  }
+}
+
+/// Parol maydoni — ko'rsatish/yashirish tugmasi bilan.
+class PasswordField extends StatelessWidget {
+  const PasswordField({
+    super.key,
+    required this.controller,
+    required this.obscure,
+    required this.onToggle,
+    required this.label,
+    this.focusNode,
+    this.helper,
+    this.hints,
+    this.enabled = true,
+    this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final bool obscure;
+  final VoidCallback onToggle;
+  final String label;
+  final FocusNode? focusNode;
+  final String? helper;
+  final List<String>? hints;
+  final bool enabled;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      enabled: enabled,
+      obscureText: obscure,
+      autocorrect: false,
+      enableSuggestions: false,
+      textInputAction: TextInputAction.done,
+      autofillHints: hints,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helper,
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            size: 21,
+            color: Eco.muted,
+          ),
+          tooltip: obscure ? 'Parolni ko‘rsatish' : 'Parolni yashirish',
+          onPressed: onToggle,
+        ),
+      ),
+      onSubmitted: onSubmitted,
+    );
+  }
+}
+
+/// Qizil xato qutisi.
+class ErrorBox extends StatelessWidget {
+  const ErrorBox({super.key, required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Eco.brickTint,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          message,
+          style: const TextStyle(fontSize: 13.5, height: 1.45, color: Eco.brick),
+        ),
+      ),
+    );
+  }
 }
