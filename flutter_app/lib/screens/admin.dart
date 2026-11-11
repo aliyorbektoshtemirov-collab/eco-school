@@ -5,6 +5,7 @@ import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'admin_create.dart';
+import 'admin_users.dart';
 import 'recycling.dart' show materialNames;
 
 /// Admin panel — saytdagi bo'limlarning telefon uchun ko'rinishi.
@@ -16,7 +17,8 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 5, vsync: this);
+  late final bool _isOwner = session.user?.isOwner == true;
+  late final TabController _tabs = TabController(length: _isOwner ? 6 : 5, vsync: this);
   Map<String, dynamic> _summary = const {};
 
   @override
@@ -67,6 +69,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
             const Tab(text: 'Vazifalar'),
             const Tab(text: 'Marafon'),
             const Tab(text: 'E’lon'),
+            if (_isOwner) const Tab(text: 'Odamlar'),
           ],
         ),
       ),
@@ -78,6 +81,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
           const TaskAdmin(),
           const MarathonAdmin(),
           AnnouncementAdmin(isOwner: isOwner),
+          if (_isOwner) const UserAdmin(),
         ],
       ),
     );

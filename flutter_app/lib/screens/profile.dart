@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../api.dart';
 import '../main.dart';
 import '../theme.dart';
+import '../session.dart';
 import '../widgets.dart';
 import 'admin.dart';
+import 'admin_users.dart';
 
 /// Profil: ball, o'rin, hissa va hisob sozlamalari.
 class ProfileScreen extends StatefulWidget {
@@ -63,6 +65,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = session.user;
     if (user == null) return const SizedBox.shrink();
 
+    final rank = (_stats?['rank'] as num?)?.toInt();
+
     return Scaffold(
       backgroundColor: Eco.bg,
       appBar: AppBar(title: const Text('Profilim')),
@@ -72,161 +76,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           children: [
+            _Hero(user: user, rank: user.role == 'student' ? rank : null, hint: _hint(user)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _Tile(
+                  icon: Icons.check_circle_outline,
+                  color: Eco.green,
+                  value: _loading ? '…' : _count('challenges', 'approved'),
+                  label: 'Topshiriq',
+                ),
+                const SizedBox(width: 10),
+                _Tile(
+                  icon: Icons.recycling,
+                  color: const Color(0xFF3E7C52),
+                  value: _loading ? '…' : '${_kg()} kg',
+                  label: 'Recycling',
+                ),
+                const SizedBox(width: 10),
+                _Tile(
+                  icon: Icons.biotech_outlined,
+                  color: const Color(0xFF2B6C8F),
+                  value: _loading ? '…' : _count('research', 'approved'),
+                  label: 'Tadqiqot',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             EcoCard(
-              child: Row(
+              padding: EdgeInsets.zero,
+              child: Column(
                 children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: Eco.green, shape: BoxShape.circle),
-                    child: Text(
-                      user.initials,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                  if (user.isAdmin)
+                    _Row(
+                      icon: Icons.inventory_2_outlined,
+                      tint: Eco.greenTint,
+                      color: Eco.green,
+                      title: 'Admin panel',
+                      sub: 'Tasdiqlash va boshqaruv',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AdminScreen()),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.fullName,
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w700,
-                            color: Eco.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              '@${user.username}',
-                              style: const TextStyle(fontSize: 13, color: Eco.muted),
-                            ),
-                            if (user.className != null)
-                              ClassTag(name: user.className),
-                            if (user.isAdmin)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Eco.greenTint,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  user.isOwner ? 'owner' : 'admin',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Eco.green,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+                  if (user.isOwner)
+                    _Row(
+                      icon: Icons.admin_panel_settings_outlined,
+                      tint: Eco.amberTint,
+                      color: Eco.amber,
+                      title: 'Owner paneli',
+                      sub: 'Admin tayinlash, parol tiklash',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UserAdminScreen()),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (user.isAdmin) ...[
-              const SizedBox(height: 12),
-              _AdminButton(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AdminScreen()),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 12),
-            EcoCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Eco ballaringiz',
-                    style: TextStyle(fontSize: 13, color: Eco.muted),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${user.points}',
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w700,
-                      color: Eco.green,
-                      height: 1.1,
-                    ),
-                  ),
-                  if (_stats != null && user.role == 'student') ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      _rankText(),
-                      style: const TextStyle(fontSize: 13.5, height: 1.5, color: Eco.muted),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-            EcoCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Mening hissam',
-                    style: TextStyle(fontSize: 13, color: Eco.muted),
-                  ),
-                  const SizedBox(height: 14),
-                  if (_loading)
-                    const Text('Yuklanmoqda...', style: TextStyle(color: Eco.faint))
-                  else if (_stats == null)
-                    const Text('Ma’lumot olinmadi.', style: TextStyle(color: Eco.faint))
-                  else ...[
-                    _line('Topshiriqlar', _count('challenges', 'approved'),
-                        _count('challenges', 'pending')),
-                    const SizedBox(height: 12),
-                    _line('Recycling', '${_kg()} kg', _count('recycling', 'pending')),
-                    const SizedBox(height: 12),
-                    _line('Tadqiqotlar', _count('research', 'approved'),
-                        _count('research', 'pending')),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-            EcoCard(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.lock_outline, color: Eco.muted, size: 21),
-                    title: const Text(
-                      'Parolni almashtirish',
-                      style: TextStyle(fontSize: 15, color: Eco.ink),
-                    ),
-                    trailing: const Icon(Icons.chevron_right, color: Eco.faint),
+                  _Row(
+                    icon: Icons.key_outlined,
+                    tint: const Color(0xFFF1F3EE),
+                    color: Eco.muted,
+                    title: 'Parolni almashtirish',
+                    sub: 'Hisob xavfsizligi',
                     onTap: _changePassword,
                   ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Eco.brick, size: 21),
-                    title: const Text(
-                      'Tizimdan chiqish',
-                      style: TextStyle(fontSize: 15, color: Eco.brick),
-                    ),
+                  _Row(
+                    icon: Icons.logout,
+                    tint: Eco.brickTint,
+                    color: Eco.brick,
+                    title: 'Tizimdan chiqish',
+                    sub: 'Qayta kirish uchun login kerak',
+                    danger: true,
+                    last: true,
                     onTap: _logout,
                   ),
                 ],
@@ -238,14 +158,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  String _rankText() {
-    final rank = (_stats?['rank'] as num?)?.toInt() ?? 1;
+  String? _hint(EcoUser user) {
+    if (user.role != 'student' || _stats == null) return null;
     final toNext = (_stats?['toNext'] as num?)?.toInt();
-
-    if (toNext == null) return 'Maktab bo‘yicha #$rank-o‘rindasiz. Hozircha birinchisiz.';
-    if (toNext <= 0) return 'Maktab bo‘yicha #$rank-o‘rindasiz.';
-    return 'Maktab bo‘yicha #$rank-o‘rindasiz. '
-        'Oldingi o‘rinni egallash uchun yana $toNext ball kerak.';
+    if (toNext == null) return 'Hozircha birinchisiz';
+    if (toNext <= 0) return null;
+    return 'Keyingi o‘ringacha yana $toNext ball';
   }
 
   String _count(String group, String field) {
@@ -258,87 +176,252 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final kg = (map?['kg'] as num?)?.toDouble() ?? 0;
     return kg.toStringAsFixed(1);
   }
-
-  Widget _line(String label, String value, String pending) {
-    final waiting = int.tryParse(pending) ?? 0;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14, color: Eco.muted)),
-        const Spacer(),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Eco.ink),
-        ),
-        if (waiting > 0) ...[
-          const SizedBox(width: 8),
-          Text(
-            '$waiting kutilmoqda',
-            style: const TextStyle(fontSize: 12, color: Eco.amber),
-          ),
-        ],
-      ],
-    );
-  }
 }
 
-class _AdminButton extends StatelessWidget {
-  const _AdminButton({required this.onTap});
+class _Hero extends StatelessWidget {
+  const _Hero({required this.user, required this.rank, required this.hint});
 
-  final VoidCallback onTap;
+  final EcoUser user;
+  final int? rank;
+  final String? hint;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Eco.green,
-          borderRadius: BorderRadius.circular(16),
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2F5D3A), Color(0xFF3F7A4D)],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0x26FFFFFF),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: const Icon(Icons.inventory_2_outlined, color: Colors.white, size: 21),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Admin panel',
-                    style: TextStyle(
-                      fontSize: 16.5,
+        boxShadow: const [
+          BoxShadow(color: Color(0x332F5D3A), blurRadius: 18, offset: Offset(0, 8)),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -4,
+            top: 6,
+            child: Image.asset('assets/timo.png', width: 104, height: 104),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0x33FFFFFF),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0x66FFFFFF), width: 1.5),
+                  ),
+                  child: Text(
+                    user.initials,
+                    style: const TextStyle(
+                      fontSize: 19,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Tasdiqlash, vazifalar, o‘quvchilar',
-                    style: TextStyle(fontSize: 12.5, color: Color(0xCCFFFFFF)),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(right: 90),
+                  child: Text(
+                    user.fullName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  [
+                    '@${user.username}',
+                    if (user.className != null) user.className!,
+                    if (user.isOwner) 'owner' else if (user.isAdmin) 'Eco Team',
+                  ].join(' · '),
+                  style: const TextStyle(fontSize: 13, color: Color(0xCCFFFFFF)),
+                ),
+                const SizedBox(height: 18),
+                const Text('Eco ball', style: TextStyle(fontSize: 13, color: Color(0xCCFFFFFF))),
+                Text(
+                  '${user.points}',
+                  style: const TextStyle(
+                    fontSize: 46,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.05,
+                  ),
+                ),
+                if (rank != null) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _Pill('Maktabda #$rank'),
+                      if (hint != null) _Pill(hint!),
+                    ],
                   ),
                 ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0x29FFFFFF),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  const _Tile({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
+        decoration: BoxDecoration(
+          color: Eco.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Eco.rule),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 26),
+            const SizedBox(height: 8),
+            FittedBox(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: Eco.ink,
+                ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0x99FFFFFF)),
+            const SizedBox(height: 2),
+            Text(label, style: const TextStyle(fontSize: 12.5, color: Eco.muted)),
           ],
         ),
       ),
     );
   }
 }
+
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.icon,
+    required this.tint,
+    required this.color,
+    required this.title,
+    required this.sub,
+    required this.onTap,
+    this.danger = false,
+    this.last = false,
+  });
+
+  final IconData icon;
+  final Color tint;
+  final Color color;
+  final String title;
+  final String sub;
+  final VoidCallback onTap;
+  final bool danger;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: tint,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: danger ? Eco.brick : Eco.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(sub, style: const TextStyle(fontSize: 12.5, color: Eco.muted)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Eco.faint),
+              ],
+            ),
+          ),
+        ),
+        if (!last) const Divider(height: 1, indent: 74),
+      ],
+    );
+  }
+}
+
 
 class _PasswordSheet extends StatefulWidget {
   const _PasswordSheet();
