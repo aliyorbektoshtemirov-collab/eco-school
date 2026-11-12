@@ -162,47 +162,60 @@ class _MentorCard extends StatelessWidget {
     final bio = mentor['bio'] as String?;
     final hasPhoto = mentor['has_photo'] == true;
 
-    return EcoCard(
-      padding: const EdgeInsets.all(14),
-      child: Row(
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Eco.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Eco.rule),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: SizedBox(
-              width: 88,
-              height: 88,
-              child: hasPhoto
-                  ? Image.network(
-                      '${Api.baseUrl}/api/mentors/files/${mentor['id']}',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _Initial(name),
-                    )
-                  : _Initial(name),
-            ),
+          AspectRatio(
+            aspectRatio: 4 / 4.4,
+            child: hasPhoto
+                ? Image.network(
+                    '${Api.baseUrl}/api/mentors/files/${mentor['id']}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _Initial(name),
+                  )
+                : _Initial(name),
           ),
-          const SizedBox(width: 14),
-          Expanded(
+          Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: Eco.ink),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                    color: Eco.ink,
+                  ),
                 ),
                 if (title != null && title.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Eco.green),
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: Eco.green,
+                    ),
                   ),
                 ],
                 if (bio != null && bio.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(bio, style: const TextStyle(fontSize: 13.5, height: 1.5, color: Eco.muted)),
+                  const SizedBox(height: 10),
+                  Text(
+                    bio,
+                    style: const TextStyle(fontSize: 14.5, height: 1.5, color: Eco.muted),
+                  ),
                 ],
                 if (owner) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       OutlinedButton(

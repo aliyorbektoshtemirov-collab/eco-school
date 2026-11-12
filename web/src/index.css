@@ -23,7 +23,7 @@ body {
 main [class*="max-w-6xl"],
 main [class*="max-w-5xl"],
 main [class*="max-w-4xl"],
-main [class*="max-w-3xl"] {
+main [class*="max-w-3xl"]:not(.mentors-wide) {
   max-width: 42rem;
 }
 

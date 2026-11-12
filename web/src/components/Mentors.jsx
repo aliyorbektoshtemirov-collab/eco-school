@@ -99,30 +99,34 @@ export default function Mentors({ isOwner, showTitle = true }) {
           Hozircha mentor qo‘shilmagan.
         </p>
       ) : (
-        <div className="mt-4 space-y-3">
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
           {data.mentors.map((m) => (
             <article
               key={m.id}
-              className="flex gap-4 rounded-2xl border border-[#e2e8dd] bg-white p-4"
+              className="group overflow-hidden rounded-3xl border border-[#e2e8dd] bg-white transition duration-300 hover:z-10 hover:scale-[1.04] hover:shadow-[0_18px_40px_rgba(47,93,58,0.18)]"
             >
               {m.has_photo ? (
                 <img
                   src={`/api/mentors/files/${m.id}`}
                   alt={m.full_name}
                   loading="lazy"
-                  className="h-24 w-24 shrink-0 rounded-2xl object-cover"
+                  className="aspect-[4/5] w-full object-cover"
                 />
               ) : (
-                <span className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-[#ecf3ea] text-[28px] font-bold text-[#2f5d3a]">
+                <span className="grid aspect-[4/5] w-full place-items-center bg-[#ecf3ea] text-[72px] font-bold text-[#2f5d3a]">
                   {m.full_name[0]}
                 </span>
               )}
-              <div className="min-w-0 flex-1">
-                <h3 className="text-[17px] font-bold">{m.full_name}</h3>
-                {m.title && <p className="mt-0.5 text-[13.5px] font-semibold text-[#2f5d3a]">{m.title}</p>}
-                {m.bio && <p className="mt-2 whitespace-pre-line text-[14px] leading-6 text-[#6b7a6f]">{m.bio}</p>}
+              <div className="p-5">
+                <h3 className="text-[20px] font-extrabold leading-tight">{m.full_name}</h3>
+                {m.title && (
+                  <p className="mt-1 text-[14.5px] font-semibold text-[#2f5d3a]">{m.title}</p>
+                )}
+                {m.bio && (
+                  <p className="mt-3 whitespace-pre-line text-[14.5px] leading-6 text-[#6b7a6f]">{m.bio}</p>
+                )}
                 {isOwner && (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-4 flex gap-2">
                     <button type="button" onClick={() => openEdit(m)} className="rounded-lg border border-[#e2e8dd] px-3 py-1.5 text-[13px] font-semibold">
                       Tahrirlash
                     </button>

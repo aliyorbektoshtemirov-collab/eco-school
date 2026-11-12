@@ -14,6 +14,7 @@ const Icon = ({ d, extra }) => (
 );
 
 const TABS = [
+  { to: '/', label: 'Bosh', end: true, icon: <Icon d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-6h4v6" /> },
   { to: '/challenges', label: 'Vazifalar', icon: <Icon d="M20 6 9 17l-5-5" /> },
   { to: '/marafon', label: 'Marafon', icon: <Icon d="M5 21V4m0 0h11l-2 4 2 4H5" /> },
   { to: '/recycling', label: 'Recycling', icon: <Icon d="M7 19H4l3-5m0 0 2-3.5M7 14h5m5-9 3 5h-3m0 0-2.5 4M17 10h-5m-1 9h6l2-3.5" /> },
@@ -32,13 +33,14 @@ export default function TabBar() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e2e8dd] bg-white/95 backdrop-blur"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul className="mx-auto flex max-w-xl">
+      <ul className="mx-auto flex max-w-2xl">
         {TABS.map((tab) => (
           <li key={tab.to} className="flex-1">
             <NavLink
               to={tab.to}
+              end={tab.end}
               className={({ isActive }) =>
-                `mx-0.5 my-1.5 flex flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10.5px] font-semibold transition-colors ${
+                `mx-0.5 my-1.5 flex flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10px] sm:text-[11.5px] font-semibold transition-colors ${
                   isActive ? 'bg-[#ecf3ea] text-[#2f5d3a]' : 'text-[#6b7a6f]'
                 }`
               }
