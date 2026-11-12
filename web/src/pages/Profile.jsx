@@ -233,6 +233,7 @@ export default function ProfilePage() {
           {user.role === 'owner' && (
             <MenuRow to="/admin" icon="👑" tint="bg-[#fdf6e6]" title="Owner paneli" sub="Admin tayinlash, parol tiklash (Odamlar bo‘limi)" />
           )}
+          <MenuRow to="/notifications" icon="🔔" tint="bg-[#ecf3ea]" title="Bildirishnomalar" sub="Admin javoblari va izohlari" />
           <MenuRow to="/impact" icon="🌿" tint="bg-[#ecf3ea]" title="Natijalar" sub="Maktabimizning ekologik hissasi" />
           <MenuRow to="/class-leaderboard" icon="🏅" tint="bg-[#fdf6e6]" title="Sinflar reytingi" sub="Sinflar o‘rtasidagi natijalar" />
           <MenuRow to="/calendar" icon="📅" tint="bg-[#e8f1f7]" title="Taqvim" sub="Tadbirlar va muhim sanalar" />

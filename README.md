@@ -557,3 +557,10 @@ Home vazifalarni bazadan oladi; arxivlangan vazifalar kartalarda chiqmaydi. Mehm
 Sayt, Mini App va ilovaning Home sahifasida Timo kunlik tavsiyasi chiqadi. Botda /start va /tavsiya orqali ham ko‘rinadi.
 Admin paneldagi “Recycling: 1 kg uchun ballni belgilash” orqali qog‘oz va plastik tarifi maktab uchun alohida saqlanadi.
 Yangi 0011_recycling_rates.sql migratsiyasini deploydan oldin qo‘llang. Oldin berilgan ball o‘zgarmaydi; yangi tarif keyingi tasdiqlashlarga tatbiq qilinadi.
+
+### Admin javoblari va bildirishnomalar
+0012_submission_notifications.sql yangi jadval va indekslarni yaratadi.
+Admin oddiy vazifa yoki recycling topshiruvini ochib “Javobni yuborish” orqali izoh yozadi. Bu amal tasdiqlash/rad etishdan alohida; topshiriq holatini o‘zgartirmaydi.
+Javob adminning ism-familiyasi va vaqti bilan o‘quvchining Bildirishnomalar bo‘limida saqlanadi. O‘qilmagan javoblar soni sayt va ilovada qo‘ng‘iroq yonida ko‘rinadi; Telegram hisobi ulangan bo‘lsa bot ham xabar yuboradi. Botdagi /javoblar shu bo‘limni ochadi.
+Flutter adminining “Javob yozish / javoblar” tugmasi joriy hisob bilan ilova ichidagi sahifani ochadi. Ilova o‘zgarishlari uchun yangi APK yig‘ish kerak. Ilova yopiq paytdagi tizim push xabarlari alohida FCM integratsiyasini talab qiladi; hozirgi xabarlar ilova ichida va ulangan Telegram botda yetkaziladi.
+Lokal tekshiruv: node tools/home-recycling-test.mjs (soxta Telegram serveri; haqiqiy foydalanuvchilarga xabar yubormaydi).

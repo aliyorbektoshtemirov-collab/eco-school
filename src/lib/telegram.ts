@@ -134,6 +134,7 @@ export async function setCommands(env: Env): Promise<void> {
     commands: [
       { command: 'start', description: 'Boshlash' },
       { command: 'tavsiya', description: 'Timo: bugungi eko tavsiya' },
+      { command: 'javoblar', description: 'Admin javoblari va bildirishnomalar' },
       { command: 'ball', description: 'Ballarim' },
       { command: 'challenge', description: 'Ochiq vazifalar' },
       { command: 'marafon', description: 'Marafon' },
@@ -190,7 +191,7 @@ export async function clearButtons(
  * Bitta o'quvchiga xabar — hisobi bog'lanmagan bo'lsa, jimgina o'tkazib yuboradi.
  * Bildirishnoma yuborilmagani uchun asosiy amal buzilmasligi kerak.
  */
-export async function notifyUser(env: Env, userId: number, text: string): Promise<void> {
+export async function notifyUser(env: Env, userId: number, text: string, opts: { buttons?: Button[][] } = {}): Promise<void> {
   if (!botEnabled(env)) return;
 
   try {
@@ -201,7 +202,7 @@ export async function notifyUser(env: Env, userId: number, text: string): Promis
       .first<{ telegram_chat_id: string }>();
 
     if (row?.telegram_chat_id) {
-      await sendMessage(env, row.telegram_chat_id, text);
+      await sendMessage(env, row.telegram_chat_id, text, opts);
     }
   } catch (err) {
     console.error('notifyUser failed:', err);

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'site_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -289,6 +290,8 @@ class _ChallengeCard extends StatelessWidget {
               style: const TextStyle(fontSize: 14, height: 1.55, color: Eco.muted),
             ),
           ],
+          if (submission != null)
+            TextButton.icon(icon: const Icon(Icons.chat_outlined), label: const Text('Admin javoblari'), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SitePage(path: '/feedback/challenge/${submission!['id']}', title: 'Admin javoblari')))),
           const SizedBox(height: 16),
           if (status == null)
             SizedBox(

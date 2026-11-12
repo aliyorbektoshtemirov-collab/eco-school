@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api, compressImage } from '../lib/api';
 
 export default function RecyclingPage() {
@@ -242,6 +243,7 @@ export default function RecyclingPage() {
 
                   <div className="text-right">
                     <p className="text-sm font-medium">{statusText[item.status]}</p>
+                    <Link to={`/feedback/recycling/${item.id}`} className="mt-2 block text-xs font-semibold text-green-800 underline">💬 Admin javoblari</Link>
 
                     {item.status === 'approved' && (
                       <p className="mt-1 font-bold text-green-700">

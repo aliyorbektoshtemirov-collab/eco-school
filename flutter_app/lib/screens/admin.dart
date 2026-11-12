@@ -197,6 +197,7 @@ class _ChallengeReviewState extends State<ChallengeReview> {
                         busy: _busy,
                         onApprove: () => _review(item, 'approved'),
                         onReject: () => _review(item, 'rejected'),
+                        onReply: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SitePage(path: '/feedback/challenge/${item['id']}', title: 'O‘quvchiga javob'))),
                       );
                     },
                   ),
@@ -380,6 +381,7 @@ class _RecyclingReviewState extends State<RecyclingReview> {
                         approveLabel: 'Tasdiqlash',
                         onApprove: () => _approve(item),
                         onReject: () => _reject(item),
+                        onReply: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SitePage(path: '/feedback/recycling/${item['id']}', title: 'O‘quvchiga javob'))),
                       );
                     },
                   ),
@@ -459,6 +461,7 @@ class _ReviewCard extends StatelessWidget {
     required this.busy,
     required this.onApprove,
     required this.onReject,
+    required this.onReply,
     this.approveLabel,
   });
 
@@ -474,6 +477,7 @@ class _ReviewCard extends StatelessWidget {
   final VoidCallback onApprove;
   final VoidCallback onReject;
   final String? approveLabel;
+  final VoidCallback onReply;
 
   @override
   Widget build(BuildContext context) {
@@ -527,6 +531,7 @@ class _ReviewCard extends StatelessWidget {
             ],
           ),
 
+          TextButton.icon(onPressed: busy ? null : onReply, icon: const Icon(Icons.chat_outlined), label: const Text('Javob yozish / javoblar')),
           if (note != null && note!.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(

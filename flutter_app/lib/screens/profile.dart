@@ -126,6 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
+                  ListTile(leading: const Icon(Icons.notifications_outlined), title: const Text('Bildirishnomalar'), subtitle: const Text('Admin javoblari va izohlari'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SitePage(path: '/notifications', title: 'Bildirishnomalar')))),
                   ListTile(leading: const Icon(Icons.add_a_photo_outlined), title: Text(_avatarBusy ? 'Yuklanmoqda…' : 'Profil rasmini tanlash'), onTap: _avatarBusy ? null : _avatar),
                   ListTile(leading: const Icon(Icons.emoji_events_outlined), title: const Text('Reyting'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen()))),
                   ...[

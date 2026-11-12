@@ -207,9 +207,10 @@ app.get('/admin/list', requireAdmin, async (c) => {
        FROM challenge_submissions cs
        JOIN challenges c ON c.id = cs.challenge_id
        JOIN profiles p ON p.id = cs.student_id
+      WHERE p.school_id IS ?
       ORDER BY cs.submitted_at DESC
       LIMIT 200`,
-  ).all();
+  ).bind(c.get('user').school_id).all();
 
   return c.json(ok({ items: results ?? [] }));
 });
@@ -224,9 +225,10 @@ app.post('/admin/:id/review', requireAdmin, async (c) => {
   const row = await c.env.DB.prepare(
     `SELECT cs.id, cs.student_id, cs.status, c.points, c.title
        FROM challenge_submissions cs JOIN challenges c ON c.id = cs.challenge_id
-      WHERE cs.id = ?`,
+       JOIN profiles student ON student.id = cs.student_id
+      WHERE cs.id = ? AND student.school_id IS ?`,
   )
-    .bind(id)
+    .bind(id, admin.school_id)
     .first<{ id: number; student_id: number; status: string; points: number; title: string }>();
 
   if (!row) fail(404, 'Topshiriq topilmadi.');

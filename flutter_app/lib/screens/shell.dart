@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../api.dart';
 
 import '../theme.dart';
 import 'challenges.dart';
@@ -17,6 +19,23 @@ class Shell extends StatefulWidget {
 
 class _ShellState extends State<Shell> {
   int _index = 0;
+  int _unread = 0;
+  Timer? _notificationTimer;
+  @override
+  void initState() {
+    super.initState();
+    _loadUnread();
+    _notificationTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadUnread());
+  }
+  Future<void> _loadUnread() async {
+    try {
+      final data = await Api.instance.get('/notifications');
+      if (mounted) setState(() => _unread = (data['unread'] as num?)?.toInt() ?? 0);
+    } catch (_) {}
+  }
+  @override
+  void dispose() { _notificationTimer?.cancel(); super.dispose(); }
+
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +50,15 @@ class _ShellState extends State<Shell> {
     return Scaffold(
       backgroundColor: Eco.bg,
       body: IndexedStack(index: _index, children: screens),
+      floatingActionButton: FloatingActionButton.small(
+        heroTag: 'notifications',
+        tooltip: 'Bildirishnomalar: $_unread ta yangi',
+        onPressed: () async {
+          await Navigator.push(context, MaterialPageRoute(builder: (_) => const SitePage(path: '/notifications', title: 'Bildirishnomalar')));
+          _loadUnread();
+        },
+        child: Badge(isLabelVisible: _unread > 0, label: Text('$_unread'), child: const Icon(Icons.notifications_outlined)),
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Eco.surface,

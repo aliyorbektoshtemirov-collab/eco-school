@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, compressImage } from '../lib/api';
 
 export default function ChallengesPage() {
@@ -180,6 +180,7 @@ export default function ChallengesPage() {
                 {submission ? (
                   <div className={`mt-4 rounded-xl px-4 py-3 text-[14px] font-semibold ${tone}`}>
                     {label}
+                    <Link to={`/feedback/challenge/${submission.id}`} className="mt-2 block text-sm underline">💬 Admin javoblarini ko‘rish</Link>
                   </div>
                 ) : (
                   <button

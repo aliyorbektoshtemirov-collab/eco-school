@@ -1,4 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
+import NotificationsPage from './pages/Notifications';
+import FeedbackPage from './pages/Feedback';
+import NotificationBell from './components/NotificationBell';
 import EcoTip from './components/EcoTip';
 import AnnouncementBar from './components/AnnouncementBar';
 import TabBar from './components/TabBar';
@@ -38,6 +41,8 @@ export default function App() {
       <Route path="/mentors" element={<MentorsPage />} />
       <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/feedback/:kind/:id" element={<FeedbackPage />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/setup" element={<Setup />} />
@@ -45,6 +50,7 @@ export default function App() {
       </Routes>
 
       <TabBar />
+      <NotificationBell />
     </>
   );
 }

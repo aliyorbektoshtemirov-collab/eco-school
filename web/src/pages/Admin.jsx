@@ -1,3 +1,4 @@
+import SubmissionFeedback from '../components/SubmissionFeedback';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, fileUrl } from '../lib/api';
@@ -365,6 +366,7 @@ function ChallengeQueue({ onDone, onError }) {
                 <ProofPhotos photos={item.photos?.length ? item.photos : [item.proof_url]} />
               </div>
 
+              <SubmissionFeedback kind="challenge" id={item.id} />
               {item.status === 'pending' ? (
                 <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[#eef2ea] pt-4">
                   <ConfirmAction
@@ -554,6 +556,7 @@ function RecyclingQueue({ onDone, onError }) {
                 )}
               </div>
 
+              <SubmissionFeedback kind="recycling" id={item.id} />
               {item.status === 'pending' && (
                 <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[#eef2ea] pt-4">
                   <ConfirmAction

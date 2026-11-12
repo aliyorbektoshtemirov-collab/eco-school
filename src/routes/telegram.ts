@@ -385,6 +385,7 @@ ${esc(tip.text)}
   // ---------------------------------------------------------------- /ball
   const pageCommands: Record<string, [string, string]> = {
     '/home': ['/', '🏠 Home'],
+    '/javoblar': ['/notifications', '🔔 Admin javoblari'],
     '/profil': ['/profile', '👤 Profil'],
     '/reyting': ['/leaderboard', '🏆 Reyting'],
     '/natijalar': ['/impact', '🌿 Natijalar'],
