@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import Mentors from '../components/Mentors';
 
 export default function ResearchPage() {
   const { user } = useAuth();
@@ -149,6 +150,8 @@ export default function ResearchPage() {
             Har bir yaxshi tadqiqot ekologik kelajak sari qadamdir.
           </p>
         </header>
+
+        <Mentors isOwner={user?.role === 'owner'} />
 
         <section className="mb-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[#e3e9df] bg-white p-5">

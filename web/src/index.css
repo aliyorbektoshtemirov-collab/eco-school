@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+/* Telefon ilovasi bilan bir xil ranglar */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f5ef;
+  --foreground: #1f2b22;
 }
 
 @theme inline {
@@ -13,5 +14,28 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* kontent pastki menyu ostida qolmasin */
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+/* Sahifalar telefondagidek ixcham ustunda turadi */
+main [class*="max-w-6xl"],
+main [class*="max-w-5xl"],
+main [class*="max-w-4xl"],
+main [class*="max-w-3xl"] {
+  max-width: 42rem;
+}
+
+main {
+  background-color: var(--background) !important;
+}
+
+/* Kartochkalar ilovadagidek: 16px burchak, nozik chiziq, soyasiz */
+main article,
+main section > div {
+  box-shadow: none;
+}
+main [class*="rounded-3xl"] {
+  border-radius: 1rem;
 }

@@ -8,7 +8,8 @@ import { verifyInitData } from '../lib/webapp';
 import { challengeCard } from '../lib/reminders';
 import { channelButton, postToChannel } from '../lib/channel';
 import { dayNumber, todayLocal } from '../lib/marathon';
-import { appButton, botEnabled, deleteWebhook, esc, getWebhookInfo, setMenuButton, sendMessage, setWebhook } from '../lib/telegram';
+import { appButton, botEnabled, deleteWebhook, esc, getWebhookInfo, setMenuButton, sendMessage, sendPhoto, setWebhook } from '../lib/telegram';
+import { MENTORS_INTRO, listMentors } from './mentors';
 import {
   START_BUTTONS,
   askLogout,
@@ -241,7 +242,8 @@ async function handleMessage(
           `Saytni shu yerning o‘zida ochsangiz bo‘ladi — pastdagi tugma yoki ` +
           `yozishma ostidagi «ECO SCHOOL».\n\n` +
           `/ball — ballaringiz\n` +
-          `/challenge — ochiq vazifalar`,
+          `/challenge — ochiq vazifalar\n` +
+          `/mentorlar — mentorlarimiz`,
         {
           buttons: [
             ...appButton(site),
@@ -423,6 +425,33 @@ async function handleMessage(
     return;
   }
 
+  // ------------------------------------------------------------- /mentorlar
+  if (command === '/mentorlar' || command === '/mentors') {
+    const mentors = await listMentors(env);
+
+    if (mentors.length === 0) {
+      await sendMessage(env, chatId, 'Mentorlar ro‘yxati hali qo‘shilmagan.');
+      return;
+    }
+
+    await sendMessage(env, chatId, `👩‍🏫 <b>Mentorlarimiz</b>\n\n${esc(MENTORS_INTRO)}`);
+
+    for (const m of mentors) {
+      const caption =
+        `<b>${esc(m.full_name)}</b>` +
+        (m.title ? `\n${esc(m.title)}` : '') +
+        (m.bio ? `\n\n${esc(m.bio)}` : '');
+      const photo = m.photo_key && site.startsWith('https://')
+        ? `${site.replace(/\/+$/, '')}/api/mentors/files/${m.id}`
+        : null;
+
+      // Rasm yuborilmasa (manzil ochilmasa), matnning o'zi yuboriladi
+      const sent = photo ? await sendPhoto(env, chatId, photo, caption.slice(0, 1000)) : false;
+      if (!sent) await sendMessage(env, chatId, caption);
+    }
+    return;
+  }
+
   if (command === '/ball') {
     const rank = await env.DB.prepare(
       `SELECT COUNT(*) + 1 AS rank FROM profiles
@@ -490,7 +519,7 @@ async function handleMessage(
   await sendMessage(
     env,
     chatId,
-    'Tushunmadim. Mavjud buyruqlar:\n/ball — ballaringiz\n/challenge — ochiq vazifalar\n/stop — hisobni uzish',
+    'Tushunmadim. Mavjud buyruqlar:\n/ball — ballaringiz\n/challenge — ochiq vazifalar\n/mentorlar — mentorlar\n/chiqish — hisobni uzish',
   );
 }
 
@@ -506,6 +535,7 @@ export async function openChallenges(
        FROM challenges c
       WHERE (c.school_id IS NULL
              OR c.school_id = (SELECT school_id FROM profiles WHERE id = ?1))
+        AND c.archived_at IS NULL
         AND NOT EXISTS (
           SELECT 1 FROM challenge_submissions s
            WHERE s.challenge_id = c.id AND s.student_id = ?1

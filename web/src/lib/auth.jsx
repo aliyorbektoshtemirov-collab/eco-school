@@ -27,15 +27,15 @@ export function AuthProvider({ children }) {
 
       let current = await refresh();
 
-      // Bot ichida ochilgan bo'lsa, parol so'ramasdan kiramiz:
-      // Telegram bergan imzo serverda tekshiriladi.
-      if (!current && inTelegram()) {
+      // Bot ichida ochilgan bo'lsa, Telegramga ulangan hisob bilan kiramiz.
+      // Eski sessiya (boshqa hisob) qolib ketgan bo'lsa ham, bot imzosi
+      // ustun turadi — shunda hisobni almashtirgan odam yangisiga o'tadi.
+      if (inTelegram()) {
         try {
           const res = await api.post('/telegram/webapp-auth', { initData: initData() });
-          current = res.user ?? null;
+          current = res.user ?? current;
         } catch {
-          // Hisob hali ulanmagan — oddiy kirish sahifasi ko'rinadi
-          current = null;
+          // Hisob hali ulanmagan — mavjud sessiya yoki kirish sahifasi qoladi
         }
       }
 

@@ -258,7 +258,7 @@ app.get('/admin/summary', requireAdmin, async (c) => {
     ).bind(me.school_id),
     c.env.DB.prepare(`SELECT COUNT(*) AS n FROM profiles WHERE school_id IS ?`).bind(me.school_id),
     c.env.DB.prepare(
-      `SELECT COUNT(*) AS n FROM challenges WHERE school_id IS NULL OR school_id IS ?`,
+      `SELECT COUNT(*) AS n FROM challenges WHERE (school_id IS NULL OR school_id IS ?) AND archived_at IS NULL`,
     ).bind(me.school_id),
     c.env.DB.prepare(
       `SELECT COUNT(*) AS n FROM marathons

@@ -16,6 +16,7 @@ import eventRoutes from './routes/events';
 import uploadRoutes from './routes/uploads';
 import telegramRoutes from './routes/telegram';
 import userRoutes from './routes/users';
+import mentorRoutes from './routes/mentors';
 import marathonRoutes from './routes/marathons';
 import announcementRoutes from './routes/announcements';
 import { sendDailyMarathonReminders } from './lib/marathonBot';
@@ -88,6 +89,7 @@ api.route('/research', researchRoutes);
 api.route('/events', eventRoutes);
 api.route('/', uploadRoutes);
 api.route('/', telegramRoutes);
+api.route('/', mentorRoutes); // ochiq o'qish — userRoutes'dan oldin bo'lishi shart
 api.route('/', userRoutes);
 api.route('/', marathonRoutes);
 api.route('/', announcementRoutes);

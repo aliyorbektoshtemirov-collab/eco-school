@@ -112,6 +112,36 @@ export async function sendMessage(
   });
 }
 
+/** Rasm bilan xabar. Rasm manzili ochiq bo'lishi kerak — Telegram o'zi yuklab oladi. */
+export async function sendPhoto(
+  env: Env,
+  chatId: string | number,
+  photoUrl: string,
+  caption: string,
+): Promise<boolean> {
+  const res = await call(env, 'sendPhoto', {
+    chat_id: chatId,
+    photo: photoUrl,
+    caption,
+    parse_mode: 'HTML',
+  });
+  return Boolean(res);
+}
+
+/** Botning «/» menyusi — buyruqlar ro'yxati. */
+export async function setCommands(env: Env): Promise<void> {
+  await call(env, 'setMyCommands', {
+    commands: [
+      { command: 'start', description: 'Boshlash' },
+      { command: 'ball', description: 'Ballarim' },
+      { command: 'challenge', description: 'Ochiq vazifalar' },
+      { command: 'marafon', description: 'Marafon' },
+      { command: 'mentorlar', description: 'Mentorlar' },
+      { command: 'chiqish', description: 'Hisobdan chiqish' },
+    ],
+  });
+}
+
 /**
  * Yozishmadan xabarni o'chirish.
  *

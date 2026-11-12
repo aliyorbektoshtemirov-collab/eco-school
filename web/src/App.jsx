@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import AnnouncementBar from './components/AnnouncementBar';
+import TabBar from './components/TabBar';
 import Home from './pages/Home';
 import Challenges from './pages/Challenges';
 import Marathon from './pages/Marathon';
@@ -38,6 +39,8 @@ export default function App() {
       <Route path="/setup" element={<Setup />} />
       <Route path="*" element={<NotFound />} />
       </Routes>
+
+      <TabBar />
     </>
   );
 }

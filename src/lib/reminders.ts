@@ -87,6 +87,7 @@ export async function sendWeeklyReminders(env: Env): Promise<void> {
            FROM challenges c
           WHERE (c.school_id IS NULL
                  OR c.school_id = (SELECT school_id FROM profiles WHERE id = ?1))
+            AND c.archived_at IS NULL
             AND NOT EXISTS (
               SELECT 1 FROM challenge_submissions s
                WHERE s.challenge_id = c.id AND s.student_id = ?1

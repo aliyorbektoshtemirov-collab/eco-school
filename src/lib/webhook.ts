@@ -1,5 +1,5 @@
 import type { Env } from '../types';
-import { botEnabled, getWebhookInfo, setMenuButton, setWebhook } from './telegram';
+import { botEnabled, getWebhookInfo, setCommands, setMenuButton, setWebhook } from './telegram';
 
 /**
  * Webhook'ni o'zi ulaydi va buzilsa o'zi tiklaydi.
@@ -18,9 +18,9 @@ const RECHECK_HOURS = 6;
 /**
  * Sozlash tarkibi o'zgarganda shu raqam oshiriladi — shunda eski yozuv
  * mos kelmay qoladi va tekshiruv 6 soatni kutmasdan darhol qayta ishlaydi.
- * (v2 — yozishma ostidagi Mini App tugmasi qo'shildi.)
+ * (v2 — yozishma ostidagi Mini App tugmasi qo'shildi; v3 — buyruqlar menyusi.)
  */
-const SETUP_VERSION = 'v2';
+const SETUP_VERSION = 'v3';
 
 export async function ensureWebhook(env: Env, origin: string): Promise<void> {
   if (!botEnabled(env) || !env.TELEGRAM_WEBHOOK_SECRET) return;
@@ -54,6 +54,7 @@ export async function ensureWebhook(env: Env, origin: string): Promise<void> {
 
     // Yozishma ostidagi «ECO SCHOOL» tugmasi — Mini App shu yerdan ochiladi
     await setMenuButton(env, want.replace(/\/api\/telegram\/webhook$/, ''));
+    await setCommands(env);
 
     await env.DB.prepare(
       `INSERT INTO settings (key, value, updated_at)

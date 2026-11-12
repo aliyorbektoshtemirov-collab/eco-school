@@ -18,7 +18,7 @@ app.get('/', async (c) => {
     c.env.DB.prepare(
       `SELECT id, title, description, category, points, end_date
          FROM challenges
-        WHERE school_id IS NULL OR school_id = ?
+        WHERE (school_id IS NULL OR school_id = ?) AND archived_at IS NULL
         ORDER BY created_at, id`,
     ).bind(user.school_id),
     c.env.DB.prepare(
@@ -39,7 +39,7 @@ app.post('/:id/submit', async (c) => {
 
   await limit(c.env, `submit:${user.id}`, 20, 3600, "Bir soatda juda ko'p hisobot yubordingiz.");
 
-  const challenge = await c.env.DB.prepare(`SELECT id FROM challenges WHERE id = ?`)
+  const challenge = await c.env.DB.prepare(`SELECT id FROM challenges WHERE id = ? AND archived_at IS NULL`)
     .bind(id)
     .first();
   if (!challenge) fail(404, 'Challenge topilmadi.');
@@ -78,7 +78,7 @@ app.get('/admin/challenges', requireAdmin, async (c) => {
             (SELECT COUNT(*) FROM challenge_submissions s WHERE s.challenge_id = c.id)
               AS submissions
        FROM challenges c
-      WHERE c.school_id IS NULL OR c.school_id = ?
+      WHERE (c.school_id IS NULL OR c.school_id = ?) AND c.archived_at IS NULL
       ORDER BY c.created_at DESC, c.id DESC`,
   )
     .bind(user.school_id)
@@ -160,7 +160,7 @@ app.put('/admin/challenges/:id', requireAdmin, async (c) => {
   return c.json(ok({ message: 'Vazifa yangilandi.' }));
 });
 
-/** O'chirish. Topshiriqlari bo'lsa o'chirilmaydi — ballar yo'qolmasin. */
+/** O'chirish. Topshiriqlari bo'lsa arxivlanadi — ballar yo'qolmasin. */
 app.delete('/admin/challenges/:id', requireAdmin, async (c) => {
   const user = c.get('user');
   const id = v.num(c.req.param('id'), 'ID', { min: 1 });
@@ -177,11 +177,13 @@ app.delete('/admin/challenges/:id', requireAdmin, async (c) => {
   if (row.school_id !== null && row.school_id !== user.school_id) {
     fail(403, 'Bu vazifa boshqa maktabniki.');
   }
+  // Topshiriqlari bo'lsa o'chirmaymiz, arxivlaymiz: ballar saqlanadi,
+  // lekin vazifa o'quvchilar, bot va sayt ro'yxatidan yo'qoladi.
   if (row.n > 0) {
-    fail(
-      409,
-      `Bu vazifa bo‘yicha ${row.n} ta topshiriq bor — o‘chirib bo‘lmaydi. Tahrirlang yoki shunday qoldiring.`,
-    );
+    await c.env.DB.prepare(`UPDATE challenges SET archived_at = datetime('now') WHERE id = ?`)
+      .bind(id)
+      .run();
+    return c.json(ok({ archived: true, message: `«${row.title}» ro‘yxatdan olib tashlandi.` }));
   }
 
   await c.env.DB.prepare(`DELETE FROM challenges WHERE id = ?`).bind(id).run();

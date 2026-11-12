@@ -111,62 +111,69 @@ export default function ChallengesPage() {
   }
 
   if (loading) {
-    return <main className="p-10">Yuklanmoqda...</main>;
+    return <main className="p-10 text-[#6b7a6f]">Yuklanmoqda...</main>;
   }
 
+  const STATUS = {
+    approved: ['Tasdiqlangan', 'bg-[#ecf3ea] text-[#2f5d3a]'],
+    rejected: ['Rad etilgan', 'bg-[#f9efed] text-[#8f4539]'],
+    pending: ['Tekshirilmoqda', 'bg-[#fdf6e6] text-[#8a5f10]'],
+  };
+
   return (
-    <main className="min-h-screen bg-[#f5f7f0] px-6 py-12">
-      <div className="mx-auto max-w-6xl">
-        <a href="/" className="text-sm text-green-800 hover:underline">
-          ← Bosh sahifa
-        </a>
+    <main className="min-h-screen bg-[#f3f5ef]">
+      <div className="sticky top-0 z-30 border-b border-[#e2e8dd] bg-white">
+        <div className="mx-auto max-w-xl px-4 py-4">
+          <h1 className="text-[18px] font-bold text-[#1f2b22]">Vazifalar</h1>
+        </div>
+      </div>
 
-        <header className="mt-10">
-          <p className="text-sm font-semibold uppercase tracking-widest text-green-700">
-            ECO SCHOOL
-          </p>
-          <h1 className="mt-3 text-4xl font-bold text-[#253b2b]">Eco Challenges</h1>
-          <p className="mt-4 text-gray-600">
-            Har bir kichik harakatingiz maktabingiz uchun ijobiy o‘zgarishdir.
-          </p>
-        </header>
+      <div className="mx-auto max-w-xl px-4 py-4">
+        {error && <p className="mb-3 rounded-xl bg-red-50 p-4 text-[#8f4539]">{error}</p>}
+        {message && !selected && (
+          <p className="mb-3 rounded-xl bg-[#ecf3ea] p-4 text-[#2f5d3a]">{message}</p>
+        )}
 
-        {error && <p className="mt-6 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
+        {challenges.length === 0 && !error && (
+          <div className="rounded-2xl border border-[#e2e8dd] bg-white p-8 text-center text-[#6b7a6f]">
+            Hozircha ochiq vazifa yo‘q.
+          </div>
+        )}
 
-        {message && <p className="mt-6 rounded-xl bg-green-50 p-4 text-green-800">{message}</p>}
-
-        <section className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="space-y-3">
           {challenges.map((challenge) => {
             const submission = submissions.find((item) => item.challenge_id === challenge.id);
+            const [label, tone] = STATUS[submission?.status] || STATUS.pending;
 
             return (
               <article
                 key={challenge.id}
-                className="rounded-3xl border border-[#e5e9df] bg-white p-7 shadow-sm"
+                className="rounded-2xl border border-[#e2e8dd] bg-white p-4"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-green-50 px-4 py-2 text-sm text-green-800">
+                  <span className="rounded-md bg-[#eef2ea] px-2 py-1 text-[12px] font-semibold text-[#4a5c4e]">
                     {challenge.category}
                   </span>
-                  <span className="font-semibold text-green-800">
+                  <span className="rounded-full bg-[#ecf3ea] px-3 py-1 text-[13px] font-bold text-[#2f5d3a]">
                     +{challenge.points} ball
                   </span>
                 </div>
 
-                <h2 className="mt-6 text-2xl font-semibold text-[#253b2b]">
-                  {challenge.title}
-                </h2>
-                <p className="mt-3 leading-7 text-gray-600">{challenge.description}</p>
-
+                <h2 className="mt-3 text-[17px] font-bold text-[#1f2b22]">{challenge.title}</h2>
+                {challenge.description && (
+                  <p className="mt-1.5 text-[14px] leading-6 text-[#6b7a6f]">
+                    {challenge.description}
+                  </p>
+                )}
                 {challenge.end_date && (
-                  <p className="mt-4 text-sm text-gray-500">
+                  <p className="mt-2 text-[12.5px] text-[#9aa89d]">
                     Tugash sanasi: {challenge.end_date}
                   </p>
                 )}
 
                 {submission ? (
-                  <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-                    Holat: {statusLabel(submission.status)}
+                  <div className={`mt-4 rounded-xl px-4 py-3 text-[14px] font-semibold ${tone}`}>
+                    {label}
                   </div>
                 ) : (
                   <button
@@ -174,7 +181,7 @@ export default function ChallengesPage() {
                       setSelected(challenge);
                       setMessage('');
                     }}
-                    className="mt-6 rounded-xl bg-[#315b3b] px-6 py-3 font-medium text-white hover:bg-[#25482e]"
+                    className="mt-4 w-full rounded-xl bg-[#2f5d3a] py-3.5 text-[15px] font-semibold text-white active:bg-[#285032]"
                   >
                     Men bajardim
                   </button>
@@ -182,62 +189,61 @@ export default function ChallengesPage() {
               </article>
             );
           })}
-        </section>
+        </div>
+      </div>
 
-        {selected && (
-          <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/40 p-4">
-            <div className="my-8 w-full max-w-lg rounded-3xl bg-white p-7 shadow-xl">
-              <h2 className="text-2xl font-bold text-[#253b2b]">Challenge topshirish</h2>
-              <p className="mt-2 text-gray-600">{selected.title}</p>
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl">
+            <h2 className="text-[18px] font-bold text-[#1f2b22]">Topshiriq yuborish</h2>
+            <p className="mt-1 text-[14px] text-[#6b7a6f]">{selected.title}</p>
 
-              <label className="mt-6 block text-sm font-medium text-gray-700">
-                Qanday bajardingiz?
-              </label>
-              <textarea
-                value={proofText}
-                onChange={(event) => setProofText(event.target.value)}
-                rows={4}
-                maxLength={2000}
-                placeholder="Bajargan ishingiz haqida yozing..."
-                className="mt-2 w-full rounded-xl border border-gray-200 p-3 outline-none focus:border-green-700"
-              />
+            <label className="mt-5 block text-[13.5px] font-semibold text-[#1f2b22]">
+              Qanday bajardingiz?
+            </label>
+            <textarea
+              value={proofText}
+              onChange={(event) => setProofText(event.target.value)}
+              rows={4}
+              maxLength={2000}
+              placeholder="Bajargan ishingiz haqida yozing..."
+              className="mt-2 w-full rounded-xl border border-[#e2e8dd] p-3 outline-none focus:border-[#2f5d3a]"
+            />
 
-              <label className="mt-5 block text-sm font-medium text-gray-700">
-                Rasm dalili (ixtiyoriy)
-              </label>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(event) => setProofFile(event.target.files?.[0] || null)}
-                className="mt-2 block w-full text-sm"
-              />
+            <label className="mt-4 block text-[13.5px] font-semibold text-[#1f2b22]">
+              Rasm (ixtiyoriy)
+            </label>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) => setProofFile(event.target.files?.[0] || null)}
+              className="mt-2 block w-full text-sm"
+            />
+            {proofFile && (
+              <p className="mt-2 text-[13px] text-[#6b7a6f]">Tanlandi: {proofFile.name}</p>
+            )}
 
-              {proofFile && (
-                <p className="mt-2 text-sm text-gray-500">
-                  Tanlangan fayl: {proofFile.name}
-                </p>
-              )}
+            {message && <p className="mt-4 text-[14px] text-[#8f4539]">{message}</p>}
 
-              <div className="mt-7 flex flex-wrap gap-3">
-                <button
-                  onClick={() => setSelected(null)}
-                  disabled={sending}
-                  className="rounded-xl border border-gray-200 px-5 py-3 text-gray-700"
-                >
-                  Bekor qilish
-                </button>
-                <button
-                  onClick={submitChallenge}
-                  disabled={sending}
-                  className="rounded-xl bg-[#315b3b] px-5 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  {sending ? 'Yuborilmoqda...' : 'Yuborish'}
-                </button>
-              </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setSelected(null)}
+                disabled={sending}
+                className="flex-1 rounded-xl border border-[#e2e8dd] py-3.5 font-semibold text-[#1f2b22]"
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={submitChallenge}
+                disabled={sending}
+                className="flex-[1.4] rounded-xl bg-[#2f5d3a] py-3.5 font-semibold text-white disabled:opacity-50"
+              >
+                {sending ? 'Yuborilmoqda...' : 'Yuborish'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }
