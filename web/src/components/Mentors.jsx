@@ -5,7 +5,7 @@ import { api, compressImage } from '../lib/api';
  * Mentorlar bo'limi (Eco Research sahifasida).
  * Hamma ko'radi; owner mentor qo'shadi, tahrirlaydi va olib tashlaydi.
  */
-export default function Mentors({ isOwner }) {
+export default function Mentors({ isOwner, showTitle = true }) {
   const [data, setData] = useState({ intro: '', mentors: [] });
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null); // null | {id?, fullName, title, bio, file, preview}
@@ -73,12 +73,12 @@ export default function Mentors({ isOwner }) {
   }
 
   if (loading) return null;
-  if (!isOwner && data.mentors.length === 0) return null;
+  if (!isOwner && data.mentors.length === 0 && showTitle) return null;
 
   return (
     <section className="mb-10">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[22px] font-bold">Mentorlar</h2>
+        {showTitle ? <h2 className="text-[22px] font-bold">Mentorlar</h2> : <span />}
         {isOwner && (
           <button
             type="button"

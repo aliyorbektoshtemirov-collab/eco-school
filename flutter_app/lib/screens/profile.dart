@@ -7,7 +7,6 @@ import '../session.dart';
 import '../widgets.dart';
 import 'admin.dart';
 import 'admin_users.dart';
-import 'mentors.dart';
 
 /// Profil: ball, o'rin, hissa va hisob sozlamalari.
 class ProfileScreen extends StatefulWidget {
@@ -132,17 +131,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         MaterialPageRoute(builder: (_) => const UserAdminScreen()),
                       ),
                     ),
-                  _Row(
-                    icon: Icons.school_outlined,
-                    tint: const Color(0xFFE8F1F7),
-                    color: const Color(0xFF2B6C8F),
-                    title: 'Mentorlar',
-                    sub: 'Mutaxassislar bilan tanishing',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MentorsScreen()),
-                    ),
-                  ),
                   _Row(
                     icon: Icons.key_outlined,
                     tint: const Color(0xFFF1F3EE),

@@ -209,7 +209,6 @@ export default function ProfilePage() {
           {user.role === 'owner' && (
             <MenuRow to="/admin" icon="👑" tint="bg-[#fdf6e6]" title="Owner paneli" sub="Admin tayinlash, parol tiklash (Odamlar bo‘limi)" />
           )}
-          <MenuRow to="/research" icon="🎓" tint="bg-[#e8f1f7]" title="Mentorlar" sub="Mutaxassislar bilan tanishing" />
           <MenuRow to="/leaderboard" icon="🏆" tint="bg-[#fdf6e6]" title="Reyting" sub="Shu hafta va oy" />
         </section>
 

@@ -4,6 +4,7 @@ import '../theme.dart';
 import 'challenges.dart';
 import 'leaderboard.dart';
 import 'marathon.dart';
+import 'mentors.dart';
 import 'profile.dart';
 import 'recycling.dart';
 
@@ -24,6 +25,7 @@ class _ShellState extends State<Shell> {
       ChallengesScreen(),
       MarathonScreen(),
       RecyclingScreen(),
+      MentorsScreen(),
       LeaderboardScreen(),
       ProfileScreen(),
     ];
@@ -72,6 +74,11 @@ class _ShellState extends State<Shell> {
                   icon: Icon(Icons.recycling_outlined, color: Eco.muted),
                   selectedIcon: Icon(Icons.recycling, color: Eco.green),
                   label: 'Recycling',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.school_outlined, color: Eco.muted),
+                  selectedIcon: Icon(Icons.school, color: Eco.green),
+                  label: 'Mentorlar',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.emoji_events_outlined, color: Eco.muted),

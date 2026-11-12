@@ -434,7 +434,9 @@ async function handleMessage(
       return;
     }
 
-    await sendMessage(env, chatId, `👩‍🏫 <b>Mentorlarimiz</b>\n\n${esc(MENTORS_INTRO)}`);
+    await sendMessage(env, chatId, `👩‍🏫 <b>Mentorlarimiz</b>\n\n${esc(MENTORS_INTRO)}`, {
+      buttons: appButton(site, '👩‍🏫 Mentorlar sahifasi', '/mentors'),
+    });
 
     for (const m of mentors) {
       const caption =

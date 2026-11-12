@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import AnnouncementBar from './components/AnnouncementBar';
 import TabBar from './components/TabBar';
+import MentorsPage from './pages/MentorsPage';
 import Home from './pages/Home';
 import Challenges from './pages/Challenges';
 import Marathon from './pages/Marathon';
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/class-leaderboard" element={<ClassLeaderboard />} />
       <Route path="/research" element={<Research />} />
+      <Route path="/mentors" element={<MentorsPage />} />
       <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/profile" element={<Profile />} />
