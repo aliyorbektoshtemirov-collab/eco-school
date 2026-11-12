@@ -39,3 +39,8 @@ main section > div {
 main [class*="rounded-3xl"] {
   border-radius: 1rem;
 }
+
+/* Flutter already reserves space for its own navigation bar. */
+html[data-native-shell="true"] body {
+  padding-bottom: 0;
+}

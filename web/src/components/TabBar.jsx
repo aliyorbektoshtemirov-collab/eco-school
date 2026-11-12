@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { inNativeShell } from '../lib/nativeShell';
 
 /**
  * Pastki menyu — telefon ilovasidagi bilan bir xil bo'limlar.
@@ -23,6 +24,7 @@ const TABS = [
 
 export default function TabBar() {
   const { pathname } = useLocation();
+  if (inNativeShell()) return null;
   if (HIDDEN.some((p) => pathname.startsWith(p))) return null;
 
   return (

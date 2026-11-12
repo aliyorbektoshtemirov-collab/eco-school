@@ -24,6 +24,7 @@ class _SitePageState extends State<SitePage> {
       }
       final controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setUserAgent('EcoSchoolNative/1.0')
         ..setNavigationDelegate(NavigationDelegate(
           onNavigationRequest: (request) => Uri.parse(request.url).host == origin.host ? NavigationDecision.navigate : NavigationDecision.prevent,
         ));
