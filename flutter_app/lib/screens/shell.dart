@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'challenges.dart';
-import 'leaderboard.dart';
+import 'site_page.dart';
 import 'marathon.dart';
-import 'mentors.dart';
 import 'profile.dart';
 import 'recycling.dart';
 
@@ -22,11 +21,10 @@ class _ShellState extends State<Shell> {
   @override
   Widget build(BuildContext context) {
     final screens = const [
+      SitePage(path: '/', title: 'Home'),
       ChallengesScreen(),
-      MarathonScreen(),
       RecyclingScreen(),
-      MentorsScreen(),
-      LeaderboardScreen(),
+      MarathonScreen(),
       ProfileScreen(),
     ];
 
@@ -60,36 +58,11 @@ class _ShellState extends State<Shell> {
               selectedIndex: _index,
               onDestinationSelected: (value) => setState(() => _index = value),
               destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.task_alt_outlined, color: Eco.muted),
-                  selectedIcon: Icon(Icons.task_alt, color: Eco.green),
-                  label: 'Vazifalar',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.flag_outlined, color: Eco.muted),
-                  selectedIcon: Icon(Icons.flag, color: Eco.green),
-                  label: 'Marafon',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.recycling_outlined, color: Eco.muted),
-                  selectedIcon: Icon(Icons.recycling, color: Eco.green),
-                  label: 'Recycling',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.school_outlined, color: Eco.muted),
-                  selectedIcon: Icon(Icons.school, color: Eco.green),
-                  label: 'Mentorlar',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.emoji_events_outlined, color: Eco.muted),
-                  selectedIcon: Icon(Icons.emoji_events, color: Eco.green),
-                  label: 'Reyting',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline, color: Eco.muted),
-                  selectedIcon: Icon(Icons.person, color: Eco.green),
-                  label: 'Profil',
-                ),
+                NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home, color: Eco.green), label: 'Home'),
+                NavigationDestination(icon: Icon(Icons.task_alt_outlined), selectedIcon: Icon(Icons.task_alt, color: Eco.green), label: 'Vazifalar'),
+                NavigationDestination(icon: Icon(Icons.recycling_outlined), selectedIcon: Icon(Icons.recycling, color: Eco.green), label: 'Recycling'),
+                NavigationDestination(icon: Icon(Icons.flag_outlined), selectedIcon: Icon(Icons.flag, color: Eco.green), label: 'Marafon'),
+                NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: Eco.green), label: 'Profil'),
               ],
             ),
           ),

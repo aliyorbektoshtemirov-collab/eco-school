@@ -103,6 +103,18 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF244B32), Color(0xFF4D8050)]), borderRadius: BorderRadius.circular(28)),
+          child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('HAR BIR QADAM MUHIM 🌱', style: TextStyle(color: Colors.white70)),
+            SizedBox(height: 12),
+            Text('Bugun tabiat uchun nima qilamiz?', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('Vazifani tanlang, bajaring va eco ball yig‘ing.', style: TextStyle(color: Colors.white70)),
+          ]),
+        ),
         ..._announcements.whereType<Map<String, dynamic>>().map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -312,9 +324,14 @@ class _SubmitSheet extends StatefulWidget {
 }
 
 class _SubmitSheetState extends State<_SubmitSheet> {
+  /// Bitta topshiriqqa nechta rasm qo'shish mumkin.
+  static const _maxPhotos = 5;
+
   final _note = TextEditingController();
-  File? _photo;
+  final List<File> _photos = [];
+
   bool _busy = false;
+  String _progress = '';
   String? _error;
 
   @override
@@ -323,23 +340,47 @@ class _SubmitSheetState extends State<_SubmitSheet> {
     super.dispose();
   }
 
+  /// Kameradan bitta, galereyadan bir nechta rasm olinadi.
   Future<void> _pick(ImageSource source) async {
+    final free = _maxPhotos - _photos.length;
+    if (free <= 0) return;
+
     try {
-      final picked = await ImagePicker().pickImage(
-        source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 82,
-      );
-      if (picked != null) setState(() => _photo = File(picked.path));
+      final picker = ImagePicker();
+      final List<XFile> picked;
+
+      if (source == ImageSource.gallery) {
+        picked = await picker.pickMultiImage(
+          maxWidth: 1600,
+          maxHeight: 1600,
+          imageQuality: 82,
+        );
+      } else {
+        final shot = await picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1600,
+          maxHeight: 1600,
+          imageQuality: 82,
+        );
+        picked = shot == null ? const [] : [shot];
+      }
+
+      if (picked.isEmpty || !mounted) return;
+
+      setState(() {
+        _error = picked.length > free
+            ? 'Eng ko‘pi $_maxPhotos ta rasm qo‘shish mumkin.'
+            : null;
+        _photos.addAll(picked.take(free).map((x) => File(x.path)));
+      });
     } catch (_) {
-      setState(() => _error = 'Rasmni ochib bo‘lmadi.');
+      if (mounted) setState(() => _error = 'Rasmni ochib bo‘lmadi.');
     }
   }
 
   Future<void> _send() async {
     final note = _note.text.trim();
-    if (note.isEmpty && _photo == null) {
+    if (note.isEmpty && _photos.isEmpty) {
       setState(() => _error = 'Izoh yozing yoki rasm qo‘shing.');
       return;
     }
@@ -350,13 +391,25 @@ class _SubmitSheetState extends State<_SubmitSheet> {
     });
 
     try {
-      String? key;
-      if (_photo != null) key = await Api.instance.uploadImage(_photo!);
+      final keys = <String>[];
+
+      for (var i = 0; i < _photos.length; i++) {
+        if (mounted) {
+          setState(() {
+            _progress = _photos.length > 1
+                ? 'Rasm yuklanmoqda: ${i + 1}/${_photos.length}'
+                : 'Rasm yuklanmoqda...';
+          });
+        }
+        keys.add(await Api.instance.uploadImage(_photos[i]));
+      }
+
+      if (mounted) setState(() => _progress = '');
 
       final id = (widget.challenge['id'] as num).toInt();
       final res = await Api.instance.post('/challenges/$id/submit', {
         'proofText': note,
-        if (key != null) 'proofUrl': key,
+        if (keys.isNotEmpty) 'proofUrls': keys,
       });
 
       if (mounted) {
@@ -367,6 +420,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
       if (!mounted) return;
       setState(() {
         _error = errorText(e);
+        _progress = '';
         _busy = false;
       });
     }
@@ -410,7 +464,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Nima qilganingizni qisqacha yozing va rasm qo‘shing.',
+                'Nima qilganingizni qisqacha yozing. 5 tagacha rasm qo‘shsangiz bo‘ladi.',
                 style: TextStyle(fontSize: 13.5, height: 1.5, color: Eco.muted),
               ),
               const SizedBox(height: 18),
@@ -424,24 +478,28 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                 ),
               ),
 
-              if (_photo != null) ...[
+              if (_photos.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(_photo!, height: 180, width: double.infinity, fit: BoxFit.cover),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (var i = 0; i < _photos.length; i++)
+                      _Thumb(
+                        file: _photos[i],
+                        onRemove: _busy ? null : () => setState(() => _photos.removeAt(i)),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () => setState(() => _photo = null),
-                  icon: const Icon(Icons.close, size: 18),
-                  label: const Text('Rasmni olib tashlash'),
-                ),
-              ] else
+                const SizedBox(height: 10),
+              ],
+
+              if (_photos.length < _maxPhotos)
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _pick(ImageSource.camera),
+                        onPressed: _busy ? null : () => _pick(ImageSource.camera),
                         icon: const Icon(Icons.photo_camera_outlined, size: 19),
                         label: const Text('Suratga olish'),
                       ),
@@ -449,13 +507,26 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _pick(ImageSource.gallery),
+                        onPressed: _busy ? null : () => _pick(ImageSource.gallery),
                         icon: const Icon(Icons.image_outlined, size: 19),
-                        label: const Text('Galereya'),
+                        label: Text(_photos.isEmpty ? 'Galereya' : 'Yana qo‘shish'),
                       ),
                     ),
                   ],
+                )
+              else
+                const Text(
+                  'Eng ko‘pi 5 ta rasm qo‘shildi.',
+                  style: TextStyle(fontSize: 13, color: Eco.muted),
                 ),
+
+              if (_progress.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  _progress,
+                  style: const TextStyle(fontSize: 13.5, color: Eco.green),
+                ),
+              ],
 
               if (_error != null) ...[
                 const SizedBox(height: 14),
@@ -473,6 +544,47 @@ class _SubmitSheetState extends State<_SubmitSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Tanlangan rasmning kichik ko'rinishi — burchagida olib tashlash tugmasi.
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.file, this.onRemove});
+
+  final File file;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 86,
+      height: 86,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(file, fit: BoxFit.cover),
+            ),
+          ),
+          Positioned(
+            top: 2,
+            right: 2,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xCC1C2A1B),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, size: 14, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import Mentors from '../components/Mentors';
 import { useAuth } from '../lib/auth';
 
 const challenges = [
@@ -359,6 +360,7 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
+      <div className="mx-auto max-w-6xl px-5"><Mentors isOwner={user?.role === 'owner'} /></div>
       <footer className="border-t border-[#e9e9e2] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 px-6 py-8 text-sm text-[#858b82] md:flex-row">
           <div>

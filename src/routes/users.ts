@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { isValidKey } from '../lib/images';
 import type { Env, Variables } from '../types';
 import { fail, ok, paging } from '../lib/http';
 import * as v from '../lib/validate';
@@ -16,6 +17,18 @@ import { hashPassword, randomToken } from '../lib/crypto';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use('*', requireAuth);
+
+app.put('/users/me/avatar', async (c) => {
+  const user = c.get('user');
+  const data = await v.body(c.req.raw);
+  const key = typeof data.key === 'string' ? data.key : '';
+  if (!isValidKey(key)) fail(422, 'Rasm kaliti yaroqsiz.');
+  const object = await c.env.FILES?.head(key);
+  if (!object || object.customMetadata?.userId !== String(user.id)) fail(403, 'Faqat o‘z rasmingizni tanlang.');
+  await c.env.DB.prepare('UPDATE profiles SET avatar_key = ? WHERE id = ?').bind(key, user.id).run();
+  return c.json(ok({ key }));
+});
+
 
 /** Ro'yxat: qidiruv, rol va sinf bo'yicha filtr. */
 app.get('/users', requireAdmin, async (c) => {

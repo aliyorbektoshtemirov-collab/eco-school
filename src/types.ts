@@ -41,6 +41,7 @@ export interface SessionUser {
   school_code: string | null;
   role: Role;
   points: number;
+  avatar_key?: string | null;
 }
 
 export type Variables = {

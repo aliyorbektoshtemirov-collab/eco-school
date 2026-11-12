@@ -245,6 +245,41 @@ function QueueRow({ open, onToggle, status, title, who, klass, meta, right, chil
 
 /* ------------------------------------------------------------ topshiriqlar */
 
+/**
+ * Topshiriqqa biriktirilgan rasmlar. Bitta bo'lsa kattaroq,
+ * bir nechta bo'lsa yonma-yon chiqadi.
+ */
+function ProofPhotos({ photos }) {
+  const keys = (photos || []).filter(Boolean);
+  if (keys.length === 0) return null;
+
+  const single = keys.length === 1;
+
+  return (
+    <div className={single ? 'w-full shrink-0 sm:w-56' : 'w-full shrink-0 sm:w-72'}>
+      <div className={single ? '' : 'grid grid-cols-2 gap-2'}>
+        {keys.map((key, i) => (
+          <a key={key} href={fileUrl(key, true)} target="_blank" rel="noreferrer" className="block">
+            <img
+              src={fileUrl(key, true)}
+              alt={`Dalil ${i + 1}`}
+              onError={(e) => {
+                e.currentTarget.parentElement.style.display = 'none';
+              }}
+              className={`w-full rounded-lg border border-[#e8ede3] object-cover ${
+                single ? 'max-h-56' : 'h-28'
+              }`}
+            />
+          </a>
+        ))}
+      </div>
+      <span className="mt-1.5 block text-[12px] text-[#6b7a6f]">
+        {single ? 'Kattalashtirish uchun bosing' : `${keys.length} ta rasm — bosib kattalashtiring`}
+      </span>
+    </div>
+  );
+}
+
 function ChallengeQueue({ onDone, onError }) {
   const { items, loading, reload } = useQueue('/challenges/admin/list');
   const [filter, setFilter] = useState('pending');
@@ -326,26 +361,7 @@ function ChallengeQueue({ onDone, onError }) {
                   </p>
                 </div>
 
-                {item.proof_url && (
-                  <a
-                    href={fileUrl(item.proof_url, true)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block w-full shrink-0 sm:w-56"
-                  >
-                    <img
-                      src={fileUrl(item.proof_url, true)}
-                      alt="Topshiriq dalili"
-                      onError={(e) => {
-                        e.currentTarget.parentElement.style.display = 'none';
-                      }}
-                      className="max-h-56 w-full rounded-lg border border-[#e8ede3] object-cover"
-                    />
-                    <span className="mt-1.5 block text-[12px] text-[#6b7a6f] underline">
-                      Kattalashtirib ko‘rish
-                    </span>
-                  </a>
-                )}
+                <ProofPhotos photos={item.photos?.length ? item.photos : [item.proof_url]} />
               </div>
 
               {item.status === 'pending' ? (
@@ -952,6 +968,18 @@ function ChallengeAdmin({ onDone, onError }) {
     setBusy(false);
   }
 
+  async function restore(item) {
+    setBusy(true);
+    try {
+      const res = await api.post(`/challenges/admin/challenges/${item.id}/restore`);
+      await load();
+      onDone(res.message);
+    } catch (err) {
+      onError(err.message);
+    }
+    setBusy(false);
+  }
+
   return (
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -1077,48 +1105,74 @@ function ChallengeAdmin({ onDone, onError }) {
               }`}
             >
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{item.title}</span>
+                <span
+                  className={`block truncate text-[15px] font-semibold ${
+                    item.archived_at ? 'text-[#9aa89d]' : ''
+                  }`}
+                >
+                  {item.title}
+                </span>
                 <span className="block truncate text-[13px] text-[#6b7a6f]">
+                  {item.archived_at ? 'Olib tashlangan · ' : ''}
                   {item.category}
                   {item.end_date ? ` · ${item.end_date} gacha` : ''}
                   {item.submissions > 0 ? ` · ${item.submissions} ta topshiriq` : ''}
                 </span>
               </span>
 
-              <span className="shrink-0 text-[14px] font-semibold tabular-nums text-[#2f5d3a]">
+              <span
+                className={`shrink-0 text-[14px] font-semibold tabular-nums ${
+                  item.archived_at ? 'text-[#9aa89d]' : 'text-[#2f5d3a]'
+                }`}
+              >
                 +{item.points}
               </span>
 
               <span className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      id: item.id,
-                      title: item.title,
-                      description: item.description || '',
-                      category: item.category,
-                      points: item.points,
-                      endDate: item.end_date || '',
-                    })
-                  }
-                  className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#2f5d3a] hover:bg-[#ecf3ea]"
-                >
-                  Tahrirlash
-                </button>
+                {item.archived_at ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => restore(item)}
+                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#2f5d3a] hover:bg-[#ecf3ea] disabled:opacity-50"
+                  >
+                    Qaytarish
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          id: item.id,
+                          title: item.title,
+                          description: item.description || '',
+                          category: item.category,
+                          points: item.points,
+                          endDate: item.end_date || '',
+                        })
+                      }
+                      className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#2f5d3a] hover:bg-[#ecf3ea]"
+                    >
+                      Tahrirlash
+                    </button>
 
-                {item.submissions === 0 && (
-                  <ConfirmAction
-                    quiet
-                    tone="red"
-                    idle="O‘chirish"
-                    question="O‘chirilsinmi?"
-                    armed={armed === item.id}
-                    busy={busy}
-                    onArm={() => setArmed(item.id)}
-                    onCancel={() => setArmed(null)}
-                    onConfirm={() => remove(item)}
-                  />
+                    {/* Topshiriq kelgan vazifa arxivga olinadi: ro'yxatlardan
+                        yo'qoladi, lekin ballar saqlanib qoladi. */}
+                    <ConfirmAction
+                      quiet
+                      tone="red"
+                      idle={item.submissions > 0 ? 'Olib tashlash' : 'O‘chirish'}
+                      question={
+                        item.submissions > 0 ? 'Ro‘yxatdan olinsinmi?' : 'O‘chirilsinmi?'
+                      }
+                      armed={armed === item.id}
+                      busy={busy}
+                      onArm={() => setArmed(item.id)}
+                      onCancel={() => setArmed(null)}
+                      onConfirm={() => remove(item)}
+                    />
+                  </>
                 )}
               </span>
             </div>

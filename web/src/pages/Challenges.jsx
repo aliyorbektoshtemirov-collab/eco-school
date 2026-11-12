@@ -123,12 +123,12 @@ export default function ChallengesPage() {
   return (
     <main className="min-h-screen bg-[#f3f5ef]">
       <div className="sticky top-0 z-30 border-b border-[#e2e8dd] bg-white">
-        <div className="mx-auto max-w-xl px-4 py-4">
+        <div className="mx-auto max-w-3xl px-4 py-4">
           <h1 className="text-[18px] font-bold text-[#1f2b22]">Vazifalar</h1>
         </div>
       </div>
 
-      <div className="mx-auto max-w-xl px-4 py-4">
+      <div className="mx-auto max-w-3xl px-4 py-4">
         {error && <p className="mb-3 rounded-xl bg-red-50 p-4 text-[#8f4539]">{error}</p>}
         {message && !selected && (
           <p className="mb-3 rounded-xl bg-[#ecf3ea] p-4 text-[#2f5d3a]">{message}</p>
@@ -140,7 +140,13 @@ export default function ChallengesPage() {
           </div>
         )}
 
-        <div className="space-y-3">
+        <section className="mb-5 rounded-3xl bg-gradient-to-br from-[#244b32] to-[#4d8050] p-6 text-white">
+          <p className="text-sm text-white/75">HAR BIR QADAM MUHIM 🌱</p>
+          <h2 className="mt-2 text-2xl font-extrabold">Bugun tabiat uchun nima qilamiz?</h2>
+          <p className="mt-3 text-sm">{challenges.length} ta vazifa · {submissions.filter(s => s.status === 'approved' && challenges.some(c => c.id === s.challenge_id)).length} ta bajarilgan</p>
+          <progress aria-label="Bajarilgan vazifalar" className="mt-4 h-2 w-full accent-lime-300" max={Math.max(challenges.length, 1)} value={submissions.filter(s => s.status === 'approved' && challenges.some(c => c.id === s.challenge_id)).length} />
+        </section>
+        <div className="grid gap-4 sm:grid-cols-2">
           {challenges.map((challenge) => {
             const submission = submissions.find((item) => item.challenge_id === challenge.id);
             const [label, tone] = STATUS[submission?.status] || STATUS.pending;
@@ -148,7 +154,7 @@ export default function ChallengesPage() {
             return (
               <article
                 key={challenge.id}
-                className="rounded-2xl border border-[#e2e8dd] bg-white p-4"
+                className="rounded-3xl border border-[#dce6d5] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="rounded-md bg-[#eef2ea] px-2 py-1 text-[12px] font-semibold text-[#4a5c4e]">

@@ -10,7 +10,7 @@
     "dev": "npm run build:web && wrangler dev",
     "build:web": "npm --prefix web run build",
     "build": "npm run build:web",
-    "deploy": "npm run build:web && wrangler deploy",
+    "deploy": "npm run db:remote && npm run build:web && wrangler deploy",
     "db:create": "wrangler d1 create eco-school-v2",
     "r2:create": "wrangler r2 bucket create eco-school-files",
     "db:local": "wrangler d1 migrations apply eco-school-v2 --local",

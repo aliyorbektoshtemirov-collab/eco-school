@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { api } from '../lib/api';
+import { api, compressImage } from '../lib/api';
 
 function Tile({ icon, value, label, pending }) {
   return (
@@ -29,10 +29,29 @@ function MenuRow({ to, icon, tint, title, sub }) {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading, logout, refresh } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'owner';
 
   const [stats, setStats] = useState(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  async function uploadAvatar(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 50 * 1024 * 1024) {
+      setAvatarError('50 MB gacha JPG, PNG yoki WebP rasm tanlang.'); return;
+    }
+    setAvatarBusy(true); setAvatarError('');
+    try {
+      const small = await compressImage(file);
+      const { key } = await api.upload(small, small.type);
+      await api.put('/users/me/avatar', { key });
+      await refresh();
+    } catch (err) { setAvatarError(err.message || 'Rasm saqlanmadi.'); }
+    finally { setAvatarBusy(false); }
+  }
+
 
   // Telegram
   const [tg, setTg] = useState(null);
@@ -146,8 +165,13 @@ export default function ProfilePage() {
             className="pointer-events-none absolute -right-1 top-2 h-28 w-28 object-contain"
           />
           <span className="grid h-[52px] w-[52px] place-items-center rounded-full border-[1.5px] border-white/40 bg-white/20 text-[19px] font-bold">
-            {initials}
+            {user.avatar_key ? <img src={`/api/files/${user.avatar_key}`} alt="Profil rasmi" className="h-full w-full rounded-full object-cover" /> : initials}
           </span>
+          <label className="relative mt-2 inline-block cursor-pointer rounded-xl bg-white/20 px-3 py-2 text-sm">
+            {avatarBusy ? 'Yuklanmoqda…' : '📷 Rasm tanlash'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" disabled={avatarBusy} onChange={uploadAvatar} className="sr-only" />
+          </label>
+          {avatarError && <p role="alert" className="mt-2 text-sm">{avatarError}</p>}
           <h1 className="mt-3 max-w-[70%] text-[21px] font-extrabold leading-tight">
             {user.full_name}
           </h1>
@@ -209,6 +233,11 @@ export default function ProfilePage() {
           {user.role === 'owner' && (
             <MenuRow to="/admin" icon="👑" tint="bg-[#fdf6e6]" title="Owner paneli" sub="Admin tayinlash, parol tiklash (Odamlar bo‘limi)" />
           )}
+          <MenuRow to="/impact" icon="🌿" tint="bg-[#ecf3ea]" title="Natijalar" sub="Maktabimizning ekologik hissasi" />
+          <MenuRow to="/class-leaderboard" icon="🏅" tint="bg-[#fdf6e6]" title="Sinflar reytingi" sub="Sinflar o‘rtasidagi natijalar" />
+          <MenuRow to="/calendar" icon="📅" tint="bg-[#e8f1f7]" title="Taqvim" sub="Tadbirlar va muhim sanalar" />
+          <MenuRow to="/research" icon="🔬" tint="bg-[#ecf3ea]" title="Eco Research" sub="Tadqiqotlar va loyihalar" />
+          <MenuRow to="/mentors" icon="🎓" tint="bg-[#e8f1f7]" title="Mentorlar" sub="Mutaxassislar bilan tanishing" />
           <MenuRow to="/leaderboard" icon="🏆" tint="bg-[#fdf6e6]" title="Reyting" sub="Shu hafta va oy" />
         </section>
 

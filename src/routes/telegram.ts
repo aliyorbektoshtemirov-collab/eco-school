@@ -368,6 +368,21 @@ async function handleMessage(
   }
 
   // ---------------------------------------------------------------- /ball
+  const pageCommands: Record<string, [string, string]> = {
+    '/home': ['/', '🏠 Home'],
+    '/profil': ['/profile', '👤 Profil'],
+    '/reyting': ['/leaderboard', '🏆 Reyting'],
+    '/natijalar': ['/impact', '🌿 Natijalar'],
+    '/research': ['/research', '🔬 Eco Research'],
+    '/taqvim': ['/calendar', '📅 Taqvim'],
+    '/recycling': ['/recycling', '♻️ Recycling'],
+    '/sinflar': ['/class-leaderboard', '🏅 Sinflar reytingi'],
+  };
+  if (pageCommands[command]) {
+    const [path, title] = pageCommands[command];
+    await sendMessage(env, chatId, title, { buttons: appButton(site, title, path) });
+    return;
+  }
   // -------------------------------------------------------------- /marafon
   if (command === '/marafon' || command === '/marathon') {
     const today = await todayLocal(env);

@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import 'site_page.dart';
+import 'leaderboard.dart';
 
 import '../api.dart';
 import '../main.dart';
@@ -7,6 +11,7 @@ import '../session.dart';
 import '../widgets.dart';
 import 'admin.dart';
 import 'admin_users.dart';
+import 'mentors.dart';
 
 /// Profil: ball, o'rin, hissa va hisob sozlamalari.
 class ProfileScreen extends StatefulWidget {
@@ -39,6 +44,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
+  bool _avatarBusy = false;
+  Future<void> _avatar() async {
+    if (_avatarBusy) return;
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1200, maxHeight: 1200, imageQuality: 85);
+    if (file == null || !mounted) return;
+    setState(() => _avatarBusy = true);
+    try {
+      final key = await Api.instance.uploadImage(File(file.path));
+      await Api.instance.put('/users/me/avatar', {'key': key});
+      await _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorText(e))));
+    } finally { if (mounted) setState(() => _avatarBusy = false); }
+  }
   Future<void> _changePassword() async {
     await showModalBottomSheet(
       context: context,
@@ -107,6 +126,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
+                  ListTile(leading: const Icon(Icons.add_a_photo_outlined), title: Text(_avatarBusy ? 'Yuklanmoqda…' : 'Profil rasmini tanlash'), onTap: _avatarBusy ? null : _avatar),
+                  ListTile(leading: const Icon(Icons.emoji_events_outlined), title: const Text('Reyting'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen()))),
+                  ...[
+                    ['/impact', 'Natijalar'],
+                    ['/class-leaderboard', 'Sinflar reytingi'],
+                    ['/research', 'Eco Research'],
+                    ['/calendar', 'Taqvim'],
+                  ].map((item) => ListTile(leading: const Icon(Icons.eco_outlined), title: Text(item[1]), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SitePage(path: item[0], title: item[1]))))),
                   if (user.isAdmin)
                     _Row(
                       icon: Icons.inventory_2_outlined,
@@ -131,6 +158,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         MaterialPageRoute(builder: (_) => const UserAdminScreen()),
                       ),
                     ),
+                  _Row(
+                    icon: Icons.school_outlined,
+                    tint: const Color(0xFFE8F1F7),
+                    color: const Color(0xFF2B6C8F),
+                    title: 'Mentorlar',
+                    sub: 'Mutaxassislar bilan tanishing',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MentorsScreen()),
+                    ),
+                  ),
                   _Row(
                     icon: Icons.key_outlined,
                     tint: const Color(0xFFF1F3EE),
@@ -221,7 +259,7 @@ class _Hero extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0x66FFFFFF), width: 1.5),
                   ),
-                  child: Text(
+                  child: user.raw['avatar_key'] != null ? ClipOval(child: Image.network(Api.instance.fileUrl(user.raw['avatar_key'] as String), headers: {'Authorization': 'Bearer ${Api.instance.token}'}, width: 52, height: 52, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Text(user.initials))) : Text(
                     user.initials,
                     style: const TextStyle(
                       fontSize: 19,

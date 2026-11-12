@@ -15,6 +15,7 @@ class TaskAdmin extends StatefulWidget {
 class _TaskAdminState extends State<TaskAdmin> {
   List<dynamic> _items = const [];
   bool _loading = true;
+  bool _busy = false;
   String? _error;
 
   @override
@@ -50,6 +51,42 @@ class _TaskAdminState extends State<TaskAdmin> {
     if (saved == true) await _load();
   }
 
+  /// Topshiriq kelgan vazifa arxivga olinadi — ballar saqlanib qoladi,
+  /// lekin ro'yxatlarda ham, botda ham ko'rinmaydi.
+  Future<void> _remove(Map<String, dynamic> item, int count) async {
+    final yes = await confirm(
+      context,
+      title: count > 0 ? 'Ro‘yxatdan olinsinmi?' : 'O‘chirilsinmi?',
+      body: count > 0
+          ? 'Saytda ham, botda ham ko‘rinmay qoladi. '
+              '$count ta topshiriq va berilgan ballar saqlanib qoladi.'
+          : item['title'] as String?,
+      yes: count > 0 ? 'Olib tashlash' : 'O‘chirish',
+      danger: true,
+    );
+    if (!yes) return;
+
+    final id = (item['id'] as num).toInt();
+    await _act(() => Api.instance.delete('/challenges/admin/challenges/$id'));
+  }
+
+  Future<void> _restore(Map<String, dynamic> item) async {
+    final id = (item['id'] as num).toInt();
+    await _act(() => Api.instance.post('/challenges/admin/challenges/$id/restore'));
+  }
+
+  Future<void> _act(Future<Map<String, dynamic>> Function() request) async {
+    setState(() => _busy = true);
+    try {
+      final res = await request();
+      if (mounted) showNote(context, res['message'] as String? ?? 'Bajarildi.');
+      await _load();
+    } catch (e) {
+      if (mounted) showNote(context, errorText(e), error: true);
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Loading();
@@ -73,10 +110,11 @@ class _TaskAdminState extends State<TaskAdmin> {
                 itemBuilder: (context, index) {
                   final item = _items[index] as Map<String, dynamic>;
                   final count = (item['submissions'] as num?)?.toInt() ?? 0;
+                  final archived = (item['archived_at'] as String? ?? '').isNotEmpty;
 
                   return EcoCard(
-                    padding: const EdgeInsets.all(15),
-                    onTap: () => _open(item),
+                    padding: const EdgeInsets.fromLTRB(15, 9, 6, 9),
+                    onTap: archived ? null : () => _open(item),
                     child: Row(
                       children: [
                         Expanded(
@@ -85,14 +123,15 @@ class _TaskAdminState extends State<TaskAdmin> {
                             children: [
                               Text(
                                 item['title'] as String? ?? '',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Eco.ink,
+                                  color: archived ? Eco.faint : Eco.ink,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
+                                '${archived ? 'Olib tashlangan · ' : ''}'
                                 '${item['category']}'
                                 '${count > 0 ? ' · $count ta topshiriq' : ''}',
                                 style: const TextStyle(fontSize: 13, color: Eco.muted),
@@ -102,14 +141,35 @@ class _TaskAdminState extends State<TaskAdmin> {
                         ),
                         Text(
                           '+${item['points']}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Eco.green,
+                            color: archived ? Eco.faint : Eco.green,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.chevron_right, color: Eco.faint),
+                        PopupMenuButton<String>(
+                          enabled: !_busy,
+                          icon: const Icon(Icons.more_vert, color: Eco.faint),
+                          onSelected: (value) {
+                            if (value == 'edit') _open(item);
+                            if (value == 'remove') _remove(item, count);
+                            if (value == 'restore') _restore(item);
+                          },
+                          itemBuilder: (_) => archived
+                              ? const [
+                                  PopupMenuItem(value: 'restore', child: Text('Qaytarish')),
+                                ]
+                              : [
+                                  const PopupMenuItem(value: 'edit', child: Text('Tahrirlash')),
+                                  PopupMenuItem(
+                                    value: 'remove',
+                                    child: Text(
+                                      count > 0 ? 'Olib tashlash' : 'O‘chirish',
+                                      style: const TextStyle(color: Eco.brick),
+                                    ),
+                                  ),
+                                ],
+                        ),
                       ],
                     ),
                   );

@@ -9,7 +9,7 @@ export const COOKIE_NAME = 'eco_session';
 type Ctx = Context<{ Bindings: Env; Variables: Variables }>;
 
 export const USER_FIELDS =
-  'id, username, full_name, class_name, school_id, school_code, role, points';
+  'id, username, full_name, class_name, school_id, school_code, role, points, avatar_key';
 
 function ttlDays(env: Env): number {
   const n = Number(env.SESSION_TTL_DAYS);
@@ -91,7 +91,7 @@ export async function currentUser(c: Ctx): Promise<SessionUser | null> {
   const id = await sha256(token);
   const row = await c.env.DB.prepare(
     `SELECT p.id, p.username, p.full_name, p.class_name, p.school_id,
-            p.school_code, p.role, p.points, s.expires_at
+            p.school_code, p.role, p.points, p.avatar_key, s.expires_at
        FROM sessions s JOIN profiles p ON p.id = s.user_id
       WHERE s.id = ? LIMIT 1`,
   )

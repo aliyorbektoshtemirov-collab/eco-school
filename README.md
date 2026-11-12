@@ -543,3 +543,11 @@ npm run setup
 npm run db:remote     # yangi jadvallar uchun — o'tkazib yubormang
 npm run deploy
 ```
+
+### Home va profil yangilanishi
+
+Pastki menyu: Home, Vazifalar, Recycling, Marafon, Profil. Qo‘shimcha sayt bo‘limlari profil ichida. Telegram Mini App shu menyudan foydalanadi; botda /home, /profil, /reyting, /natijalar, /research, /taqvim, /recycling, /sinflar buyruqlari ham mavjud.
+
+Profil rasmi uchun 0010_profile_avatar.sql migratsiyasi va R2 FILES binding kerak. Hisob to‘g‘rilangach, deploydan oldin barcha D1 migratsiyalarini qo‘llang. Hozir push avtomatik deploy qilmaydi; Deploy workflow faqat qo‘lda ishga tushiriladi.
+
+Flutter Home va qo‘shimcha sayt bo‘limlari webview_flutter orqali joriy hisob bilan ochiladi. APK yig‘ishdan oldin flutter pub get bajaring. Flutter SDK bu mahalliy muhitda mavjud emasligi sababli APK tekshiruvi bajarilmadi.
