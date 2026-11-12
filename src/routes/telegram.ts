@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { dailyTip } from '../lib/tips';
 import type { Env, Variables } from '../types';
 import { clientIp, fail, ok } from '../lib/http';
 import * as v from '../lib/validate';
@@ -232,8 +233,22 @@ async function handleMessage(
       school_id: number | null;
     }>();
 
+  if (command === '/tavsiya' || command === '/tip') {
+    const tip = dailyTip();
+    await sendMessage(env, chatId, `🐢 <b>Timo tavsiya qiladi</b>
+
+<b>${esc(tip.title)}</b>
+${esc(tip.text)}`, { buttons: appButton(site, tip.action, tip.path) });
+    return;
+  }
+
   // ---------------------------------------------------------------- /start
   if (command === '/start') {
+    const tip = dailyTip();
+    await sendMessage(env, chatId, `🌱 <b>Bugungi tavsiya: ${esc(tip.title)}</b>
+${esc(tip.text)}
+
+/tavsiya — kunlik eko tavsiya`);
     if (linked) {
       await sendMessage(
         env,

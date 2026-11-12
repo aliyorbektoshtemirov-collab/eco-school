@@ -133,6 +133,7 @@ export async function setCommands(env: Env): Promise<void> {
   await call(env, 'setMyCommands', {
     commands: [
       { command: 'start', description: 'Boshlash' },
+      { command: 'tavsiya', description: 'Timo: bugungi eko tavsiya' },
       { command: 'ball', description: 'Ballarim' },
       { command: 'challenge', description: 'Ochiq vazifalar' },
       { command: 'marafon', description: 'Marafon' },

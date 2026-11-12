@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 import { api, fileUrl } from '../lib/api';
 
 export default function RecyclingAdminPage() {
+  const [rates, setRates] = useState(null);
+  const [savingRates, setSavingRates] = useState(false);
+  const [ratesMessage, setRatesMessage] = useState('');
+  useEffect(() => { api.get('/recycling/rates').then(data => setRates(data.rates)).catch(err => setRatesMessage(err.message)); }, []);
+  async function saveRates(event) {
+    event.preventDefault(); setSavingRates(true); setRatesMessage('');
+    try {
+      const result = await api.put('/recycling/admin/rates', { paper: Number(rates.paper), plastic: Number(rates.plastic) });
+      setRates(result.rates); setRatesMessage(result.message);
+    } catch (err) { setRatesMessage(err.message); }
+    finally { setSavingRates(false); }
+  }
   const [items, setItems] = useState([]);
   const [weights, setWeights] = useState({});
   const [loading, setLoading] = useState(true);
@@ -88,6 +100,18 @@ export default function RecyclingAdminPage() {
           </p>
         </header>
 
+        <form onSubmit={saveRates} className="mb-6 rounded-3xl border border-green-100 bg-white p-6">
+          <h2 className="text-xl font-bold">1 kg uchun eco ball</h2>
+          <p className="mt-2 text-sm text-gray-500">Maktabingiz uchun belgilang. Avval berilgan ball o‘zgarmaydi; yangi tarif keyingi tasdiqlashlarga qo‘llanadi.</p>
+          {rates && <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {['paper', 'plastic'].map(material => <label key={material} className="text-sm font-semibold">
+              {material === 'paper' ? '📄 Qog‘oz' : '♻️ Plastik'}
+              <input type="number" min="1" max="10000" step="1" required value={rates[material]} onChange={e => setRates({ ...rates, [material]: e.target.value })} className="mt-2 block w-full rounded-xl border p-3" />
+            </label>)}
+          </div>}
+          <button disabled={!rates || savingRates} className="mt-4 rounded-xl bg-green-800 px-5 py-3 font-semibold text-white disabled:opacity-50">{savingRates ? 'Saqlanmoqda…' : 'Ballni saqlash'}</button>
+          {ratesMessage && <p role="status" className="mt-3 text-sm">{ratesMessage}</p>}
+        </form>
         <div className="mb-6 rounded-2xl border border-green-100 bg-white p-5">
           <p className="text-sm text-gray-500">Kutilayotgan topshiriqlar</p>
           <p className="mt-1 text-3xl font-bold text-green-800">{pendingCount}</p>

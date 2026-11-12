@@ -551,3 +551,9 @@ Pastki menyu: Home, Vazifalar, Recycling, Marafon, Profil. Qo‘shimcha sayt bo�
 Profil rasmi uchun 0010_profile_avatar.sql migratsiyasi va R2 FILES binding kerak. Hisob to‘g‘rilangach, deploydan oldin barcha D1 migratsiyalarini qo‘llang. Hozir push avtomatik deploy qilmaydi; Deploy workflow faqat qo‘lda ishga tushiriladi.
 
 Flutter Home va qo‘shimcha sayt bo‘limlari webview_flutter orqali joriy hisob bilan ochiladi. APK yig‘ishdan oldin flutter pub get bajaring. Flutter SDK bu mahalliy muhitda mavjud emasligi sababli APK tekshiruvi bajarilmadi.
+
+### Kunlik tavsiya va recycling tarifi
+Home vazifalarni bazadan oladi; arxivlangan vazifalar kartalarda chiqmaydi. Mehmonlarga faqat umumiy vazifalar ko‘rinadi.
+Sayt, Mini App va ilovaning Home sahifasida Timo kunlik tavsiyasi chiqadi. Botda /start va /tavsiya orqali ham ko‘rinadi.
+Admin paneldagi “Recycling: 1 kg uchun ballni belgilash” orqali qog‘oz va plastik tarifi maktab uchun alohida saqlanadi.
+Yangi 0011_recycling_rates.sql migratsiyasini deploydan oldin qo‘llang. Oldin berilgan ball o‘zgarmaydi; yangi tarif keyingi tasdiqlashlarga tatbiq qilinadi.

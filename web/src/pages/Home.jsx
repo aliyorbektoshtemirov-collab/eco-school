@@ -4,39 +4,27 @@ import { api } from '../lib/api';
 import Mentors from '../components/Mentors';
 import { useAuth } from '../lib/auth';
 
-const challenges = [
-  {
-    icon: '♻️',
-    category: 'CHIQINDILAR',
-    title: 'Plastiksiz bir hafta',
-    description: 'Bir martalik plastikdan foydalanishni kamaytiring.',
-    color: 'bg-[#e8f0e4]',
-  },
-  {
-    icon: '📄',
-    category: 'RESURSLAR',
-    title: 'Qog‘ozni asraymiz',
-    description: 'Qog‘ozni tejang va qayta ishlashga topshiring.',
-    color: 'bg-[#f5eddf]',
-  },
-  {
-    icon: '💡',
-    category: 'ENERGIYA',
-    title: 'Chiroqni o‘chir!',
-    description: 'Keraksiz chiroqlarni o‘chirib, energiyani tejang.',
-    color: 'bg-[#e8edf3]',
-  },
-];
-
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
+  const [challenges, setChallenges] = useState([]);
+  const [tasksError, setTasksError] = useState('');
   const [impact, setImpact] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
+    async function loadTasks() {
+      try {
+        const data = await api.get(user ? '/challenges' : '/challenges/preview');
+        if (active) { setChallenges((data.challenges || []).slice(0, 3)); setTasksError(''); }
+      } catch {
+        if (active) { setChallenges([]); setTasksError('Vazifalarni yuklab bo‘lmadi. Vazifalar bo‘limidan qayta urinib ko‘ring.'); }
+      }
+    }
+
     async function loadData() {
+      await loadTasks();
       try {
         // Statistika faqat tizimga kirganlarga ochiq
         if (user) {
@@ -51,9 +39,14 @@ export default function Home() {
     }
 
     if (!authLoading) loadData();
+    const refreshTasks = () => { if (!authLoading) loadTasks(); };
+    window.addEventListener('focus', refreshTasks);
+    const timer = setInterval(refreshTasks, 60000);
 
     return () => {
       active = false;
+      window.removeEventListener('focus', refreshTasks);
+      clearInterval(timer);
     };
   }, [user, authLoading]);
 
@@ -290,24 +283,26 @@ export default function Home() {
             </Link>
           </div>
 
+          {!loading && challenges.length === 0 && <p className="mt-6 rounded-2xl bg-white p-6 text-sm text-[#66746a]">{tasksError || 'Hozircha ochiq vazifa yo‘q. Yangi imkoniyatlar tez orada shu yerda ko‘rinadi.'}</p>}
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {challenges.map((challenge, index) => (
               <article
-                key={challenge.title}
+                key={challenge.id}
                 className="rounded-2xl border border-[#e5e7df] bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#9a9f96]">0{index + 1} / 03</span>
-                  <span className={`rounded-full px-3 py-2 text-xs ${challenge.color}`}>
+                  <span className="text-xs text-[#9a9f96]">0{index + 1} / 0{challenges.length}</span>
+                  <span className={`rounded-full px-3 py-2 text-xs bg-[#e8f0e4]`}>
                     {challenge.category}
                   </span>
                 </div>
-                <div className="mt-7 text-4xl">{challenge.icon}</div>
+                <div className="mt-7 text-4xl">🌱</div>
                 <h3 className="mt-5 text-xl font-semibold">{challenge.title}</h3>
+                <p className="mt-2 font-bold text-[#315b3b]">+{challenge.points} eco ball</p>
                 <p className="mt-3 min-h-12 text-sm leading-6 text-[#7a8178]">
                   {challenge.description}
                 </p>
-                <Link to="/challenges" className="mt-6 inline-block text-sm font-semibold text-[#47764c]">
+                <Link to={user ? `/challenges?open=${challenge.id}` : '/login'} className="mt-6 inline-block text-sm font-semibold text-[#47764c]">
                   Ishtirok etish ↗
                 </Link>
               </article>

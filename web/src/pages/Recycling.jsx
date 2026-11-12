@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, compressImage } from '../lib/api';
 
 export default function RecyclingPage() {
+  const [rates, setRates] = useState(null);
   const [material, setMaterial] = useState('paper');
   const [amount, setAmount] = useState('');
   const [proofFile, setProofFile] = useState(null);
@@ -15,6 +16,7 @@ export default function RecyclingPage() {
     try {
       const data = await api.get('/recycling');
       setSubmissions(data.submissions || []);
+      setRates(data.rates);
     } catch (error) {
       if (error.status !== 401) {
         setMessage("Ma'lumotlarni yuklashda xatolik: " + error.message);
@@ -120,6 +122,8 @@ export default function RecyclingPage() {
           className="rounded-3xl border border-[#e3e9df] bg-white p-6 shadow-sm"
         >
           <h2 className="text-xl font-semibold">Yangi topshiruv</h2>
+          <p className="mt-3 rounded-2xl bg-green-50 p-4 text-sm text-green-900">♻️ Har bir kilogramm — toza maktab sari qadam. Ballni maktab adminlari belgilaydi.</p>
+          {rates && Number(amount) > 0 && Number(amount) <= 1000 && <p className="mt-3 text-lg font-bold text-green-800">Taxminan +{Math.round(Number(amount) * rates[material])} eco ball! <span className="block text-xs font-normal">Yakuniy ball tasdiqlangan vazn va tasdiqlash paytidagi tarifga bog‘liq.</span></p>}
 
           <p className="mb-3 mt-5 text-sm font-medium">Chiqindi turi</p>
 
@@ -133,7 +137,7 @@ export default function RecyclingPage() {
             >
               <span className="text-3xl">📄</span>
               <span className="mt-2 block font-semibold">Qog‘oz</span>
-              <span className="text-sm text-gray-500">1 kg = 25 ball</span>
+              <span className="text-sm text-gray-500">{rates ? `1 kg = ${rates.paper} ball` : 'Ball yuklanmoqda…'}</span>
             </button>
 
             <button
@@ -145,7 +149,7 @@ export default function RecyclingPage() {
             >
               <span className="text-3xl">♻️</span>
               <span className="mt-2 block font-semibold">Plastik</span>
-              <span className="text-sm text-gray-500">1 kg = 25 ball</span>
+              <span className="text-sm text-gray-500">{rates ? `1 kg = ${rates.plastic} ball` : 'Ball yuklanmoqda…'}</span>
             </button>
           </div>
 

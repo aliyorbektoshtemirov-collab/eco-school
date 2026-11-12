@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { dailyTip } from './lib/tips';
 import { HTTPException } from 'hono/http-exception';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Env, Variables } from './types';
@@ -81,6 +82,7 @@ api.use('*', async (c, next) => {
 });
 
 api.get('/health', (c) => c.json({ ok: true, service: c.env.APP_NAME ?? 'ECO SCHOOL' }));
+api.get('/tips', (c) => c.json({ ok: true, tip: dailyTip() }));
 api.route('/auth', authRoutes);
 api.route('/stats', statsRoutes);
 api.route('/challenges', challengeRoutes);

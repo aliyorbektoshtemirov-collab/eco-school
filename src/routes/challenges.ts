@@ -8,6 +8,13 @@ import { esc, notifyUser } from '../lib/telegram';
 import { announceChallenge } from '../lib/reminders';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+// Guest preview contains shared tasks only; signed-in Home uses the school-scoped list.
+app.get('/preview', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    'SELECT id, title, description, category, points, end_date FROM challenges WHERE school_id IS NULL AND archived_at IS NULL ORDER BY created_at, id LIMIT 3'
+  ).all();
+  return c.json(ok({ challenges: results ?? [] }));
+});
 app.use('*', requireAuth);
 
 /** Challenge'lar va joriy o'quvchining topshiriqlari. */

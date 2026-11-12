@@ -71,6 +71,7 @@ export default function AdminPage() {
               ←
             </Link>
             <h1 className="text-[17px] font-bold">Admin panel</h1>
+            <a href="/recycling-admin" className="mt-3 inline-block rounded-xl bg-[#ecf3ea] px-4 py-2 text-sm font-semibold text-[#2f5d3a]">♻️ Recycling: 1 kg uchun ballni belgilash →</a>
           </div>
 
           <p className="text-[13px] text-[#6b7a6f]">

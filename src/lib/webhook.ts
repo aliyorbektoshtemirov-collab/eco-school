@@ -20,7 +20,7 @@ const RECHECK_HOURS = 6;
  * mos kelmay qoladi va tekshiruv 6 soatni kutmasdan darhol qayta ishlaydi.
  * (v2 — yozishma ostidagi Mini App tugmasi qo'shildi; v3 — buyruqlar menyusi.)
  */
-const SETUP_VERSION = 'v3';
+const SETUP_VERSION = 'v4';
 
 export async function ensureWebhook(env: Env, origin: string): Promise<void> {
   if (!botEnabled(env) || !env.TELEGRAM_WEBHOOK_SECRET) return;

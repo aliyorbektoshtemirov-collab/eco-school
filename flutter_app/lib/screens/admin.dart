@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'site_page.dart';
 
 import '../api.dart';
 import '../main.dart';
@@ -55,6 +56,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
       backgroundColor: Eco.bg,
       appBar: AppBar(
         title: const Text('Admin panel'),
+        actions: [IconButton(tooltip: 'Recycling ballini belgilash', icon: const Icon(Icons.tune), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SitePage(path: '/recycling-admin', title: 'Recycling ballari'))))],
         bottom: TabBar(
           controller: _tabs,
           isScrollable: true,

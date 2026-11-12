@@ -2,17 +2,37 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { fail, ok } from '../lib/http';
 import * as v from '../lib/validate';
-import { addPoints, requireAdmin, requireAuth } from '../lib/auth';
+import { requireAdmin, requireAuth } from '../lib/auth';
 import { limit } from '../lib/ratelimit';
 import { notifyUser } from '../lib/telegram';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use('*', requireAuth);
 
-function pointsPerKg(env: Env): number {
+function defaultRate(env: Env): number {
   const n = Number(env.POINTS_PER_KG);
   return Number.isFinite(n) && n > 0 ? n : 25;
 }
+
+async function schoolRates(env: Env, schoolId: number | null) {
+  const row = await env.DB.prepare('SELECT paper_points_per_kg, plastic_points_per_kg FROM schools WHERE id = ?')
+    .bind(schoolId).first<{ paper_points_per_kg: number | null; plastic_points_per_kg: number | null }>();
+  return { paper: row?.paper_points_per_kg ?? defaultRate(env), plastic: row?.plastic_points_per_kg ?? defaultRate(env) };
+}
+
+app.get('/rates', async (c) => c.json(ok({ rates: await schoolRates(c.env, c.get('user').school_id) })));
+
+app.put('/admin/rates', requireAdmin, async (c) => {
+  const user = c.get('user');
+  if (!user.school_id) fail(422, 'Hisobingizga maktab biriktirilmagan.');
+  const data = await v.body(c.req.raw);
+  const paper = v.num(data.paper, 'Qog‘oz uchun ball', { min: 1, max: 10000 });
+  const plastic = v.num(data.plastic, 'Plastik uchun ball', { min: 1, max: 10000 });
+  if (!Number.isInteger(paper) || !Number.isInteger(plastic)) fail(422, 'Ball butun son bo‘lsin.');
+  await c.env.DB.prepare('UPDATE schools SET paper_points_per_kg = ?, plastic_points_per_kg = ? WHERE id = ?')
+    .bind(paper, plastic, user.school_id).run();
+  return c.json(ok({ rates: { paper, plastic }, message: 'Yangi ball saqlandi. Keyingi tasdiqlashlarda qo‘llanadi.' }));
+});
 
 /** O'quvchining o'z topshiriqlari. */
 app.get('/', async (c) => {
@@ -27,7 +47,7 @@ app.get('/', async (c) => {
     .bind(user.id)
     .all();
 
-  return c.json(ok({ submissions: results ?? [] }));
+  return c.json(ok({ submissions: results ?? [], rates: await schoolRates(c.env, user.school_id) }));
 });
 
 /** Yangi topshiruv. */
@@ -81,10 +101,10 @@ app.post('/admin/:id/review', requireAdmin, async (c) => {
   const status = v.oneOf(data.status, ['approved', 'rejected'] as const, 'Holat');
 
   const row = await c.env.DB.prepare(
-    `SELECT id, student_id, status FROM recycling_submissions WHERE id = ?`,
+    `SELECT id, student_id, status, school_id, material FROM recycling_submissions WHERE id = ? AND school_id = ?`,
   )
-    .bind(id)
-    .first<{ id: number; student_id: number; status: string }>();
+    .bind(id, admin.school_id)
+    .first<{ id: number; student_id: number; status: string; school_id: number; material: 'paper' | 'plastic' }>();
 
   if (!row) fail(404, 'Topshiruv topilmadi.');
   if (row.status !== 'pending') fail(409, "Topshiruv allaqachon ko'rib chiqilgan.");
@@ -105,17 +125,18 @@ app.post('/admin/:id/review', requireAdmin, async (c) => {
   }
 
   const verified = v.num(data.verifiedAmountKg, 'Haqiqiy vazn', { min: 0.01, max: 1000 });
-  const points = Math.round(verified * pointsPerKg(c.env));
-
-  await c.env.DB.prepare(
-    `UPDATE recycling_submissions
-        SET status = 'approved', verified_amount_kg = ?, awarded_points = ?, reviewed_by = ?
-      WHERE id = ? AND status = 'pending'`,
-  )
-    .bind(Math.round(verified * 100) / 100, points, admin.id, id)
-    .run();
-
-  await addPoints(c.env, row.student_id, points);
+  const rates = await schoolRates(c.env, row.school_id);
+  const weight = Math.round(verified * 100) / 100;
+  const points = Math.round(weight * rates[row.material]);
+  const [, updated] = await c.env.DB.batch([
+    c.env.DB.prepare(
+      "UPDATE profiles SET points = points + ? WHERE id = ? AND EXISTS (SELECT 1 FROM recycling_submissions WHERE id = ? AND status = 'pending')"
+    ).bind(points, row.student_id, id),
+    c.env.DB.prepare(
+      "UPDATE recycling_submissions SET status = 'approved', verified_amount_kg = ?, awarded_points = ?, reviewed_by = ? WHERE id = ? AND status = 'pending'"
+    ).bind(weight, points, admin.id, id),
+  ]);
+  if (updated.meta.changes !== 1) fail(409, 'Topshiruv allaqachon ko‘rib chiqilgan.');
 
   c.executionCtx.waitUntil(
     notifyUser(

@@ -18,6 +18,7 @@ class RecyclingScreen extends StatefulWidget {
 }
 
 class _RecyclingScreenState extends State<RecyclingScreen> {
+  Map<String, dynamic>? _rates;
   List<dynamic> _items = const [];
   bool _loading = true;
   String? _error;
@@ -36,7 +37,11 @@ class _RecyclingScreenState extends State<RecyclingScreen> {
 
     try {
       final res = await Api.instance.get('/recycling');
-      setState(() => _items = res['submissions'] as List? ?? const []);
+      if (!mounted) return;
+      setState(() {
+        _items = res['submissions'] as List? ?? const [];
+        _rates = (res['rates'] as Map?)?.cast<String, dynamic>();
+      });
     } catch (e) {
       if (mounted) setState(() => _error = errorText(e));
     }
@@ -90,6 +95,11 @@ class _RecyclingScreenState extends State<RecyclingScreen> {
                 'Eco Team tasdiqlagach ball qo‘shiladi.',
                 style: TextStyle(fontSize: 13.5, height: 1.55, color: Eco.muted),
               ),
+              if (_rates != null) ...[
+                const SizedBox(height: 12),
+                Text('📄 1 kg qog‘oz = ${_rates!['paper']} ball\n♻️ 1 kg plastik = ${_rates!['plastic']} ball', style: const TextStyle(fontWeight: FontWeight.bold, color: Eco.green)),
+                const Text('Tarifni maktab adminlari belgilaydi. Yakuniy ball tasdiqlash paytidagi tarifga bog‘liq.', style: TextStyle(fontSize: 12, color: Eco.muted)),
+              ],
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -297,6 +307,11 @@ class _RecyclingSheetState extends State<_RecyclingSheet> {
                   Expanded(child: _materialButton('plastic', Icons.local_drink_outlined)),
                 ],
               ),
+              if (_rates != null) ...[
+                const SizedBox(height: 12),
+                Text('📄 1 kg qog‘oz = ${_rates!['paper']} ball\n♻️ 1 kg plastik = ${_rates!['plastic']} ball', style: const TextStyle(fontWeight: FontWeight.bold, color: Eco.green)),
+                const Text('Tarifni maktab adminlari belgilaydi. Yakuniy ball tasdiqlash paytidagi tarifga bog‘liq.', style: TextStyle(fontSize: 12, color: Eco.muted)),
+              ],
               const SizedBox(height: 16),
 
               TextField(

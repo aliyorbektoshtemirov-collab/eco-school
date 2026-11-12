@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import EcoTip from './components/EcoTip';
 import AnnouncementBar from './components/AnnouncementBar';
 import TabBar from './components/TabBar';
 import MentorsPage from './pages/MentorsPage';
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <>
       <AnnouncementBar />
+      <EcoTip />
 
       <Routes>
       <Route path="/" element={<Home />} />
